@@ -205,7 +205,7 @@ namespace NetcodeIO.NET.Internal
 		// Decrypt a private connect token
 		public static int DecryptPrivateConnectToken(byte[] encryptedConnectToken, ulong protocolID, ulong expireTimestamp, ulong sequence, byte[] key, byte[] outBuffer)
 		{
-			int len = privateConnectToken.Length;
+			int len = encryptedConnectToken.Length;
 
 			byte[] additionalData = BufferPool.GetBuffer(Defines.NETCODE_VERSION_INFO_BYTES + 8 + 8);
 			using (var writer = ByteArrayReaderWriter.Get(additionalData))
@@ -222,7 +222,7 @@ namespace NetcodeIO.NET.Internal
 				writer.Write(sequence);
 			}
 
-			var ret = AEAD_Chacha20_Poly1305.Decrypt(privateConnectToken, 0, len, additionalData, nonce, key, outBuffer);
+			var ret = AEAD_Chacha20_Poly1305.Decrypt(encryptedConnectToken, 0, len, additionalData, nonce, key, outBuffer);
 
 			BufferPool.ReturnBuffer(additionalData);
 			BufferPool.ReturnBuffer(nonce);

@@ -45,6 +45,7 @@
     <Compile Include="DatagramQueue.cs" />
     <Compile Include="Defines.cs" />
     <Compile Include="EncryptionManager.cs" />
+    <Compile Include="NetcodeLogLevel.cs" />
     <Compile Include="NetcodePacket.cs" />
     <Compile Include="NetcodeReplayProtection.cs" />
     <Compile Include="PacketIO.cs" />
