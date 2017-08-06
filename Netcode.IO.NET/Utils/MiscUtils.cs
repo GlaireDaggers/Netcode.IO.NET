@@ -48,6 +48,7 @@ namespace NetcodeIO.NET.Utils
 			return compare;
 		}
 
+#if UNSAFE
 		public unsafe static bool CompareHMACConstantTime(byte[] lhs, byte[] rhs)
 		{
 			if (lhs.Length != Defines.MAC_SIZE || rhs.Length != Defines.MAC_SIZE)
@@ -73,5 +74,18 @@ namespace NetcodeIO.NET.Utils
 
 			return compare;
 		}
+#else
+		public static bool CompareHMACConstantTime(byte[] lhs, byte[] rhs)
+		{
+			if (lhs.Length != Defines.MAC_SIZE || rhs.Length != Defines.MAC_SIZE)
+				throw new InvalidOperationException();
+
+			bool compare = true;
+			for( int i = 0; i < Defines.MAC_SIZE; i++ )
+				compare &= (lhs[i] == rhs[i]);
+
+			return compare;
+		}
+#endif
 	}
 }
