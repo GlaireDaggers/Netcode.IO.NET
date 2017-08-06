@@ -51,6 +51,7 @@
     <Compile Include="PacketIO.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TokenFactory.cs" />
     <Compile Include="Utils\BufferPool.cs" />
     <Compile Include="Utils\DateTimeEx.cs" />
     <Compile Include="Utils\IO\ByteArrayReader.cs" />
