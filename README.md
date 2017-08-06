@@ -14,18 +14,18 @@ Most of the API resides in the namespace `NetcodeIO.NET`
 To create and start a new server:
 ```c#
 Server server = new Server(
-	256,					// int maximum number of clients which can connect to this server at one time
-	"127.0.0.1", 40000,		// string public address and int port clients will connect to
+	256,			// int maximum number of clients which can connect to this server at one time
+	"127.0.0.1", 40000,	// string public address and int port clients will connect to
 	0x1122334455667788L,	// ulong protocol ID shared between clients and server
-	privateKeyBytes			// byte[32] private crypto key shared between backend servers
+	privateKeyBytes		// byte[32] private crypto key shared between backend servers
 );
-server.Start();				// start the server running
+server.Start();			// start the server running
 ```
 
 To listen for various events:
 ```c#
 // Called when a client has connected
-server.OnClientConnected += clientConnectedHandler;			// void( RemoteClient client )
+server.OnClientConnected += clientConnectedHandler;		// void( RemoteClient client )
 
 // Called when a client disconnects
 server.OnClientDisconnected += clientDisconnectedHandler;	// void( RemoteClient client )
@@ -105,7 +105,7 @@ tokenFactory.GenerateConnectToken(
 	addressList,		// IPEndPoint[] list of addresses the client can connect to. Must have at least one and no more than 32.
 	expirySeconds,		// in how many seconds will the token expire
 	sequenceNumber,		// ulong token sequence number used to uniquely identify a connect token.
-	clientID,			// ulong ID used to uniquely identify this client
-	userData			// byte[], up to 256 bytes of arbitrary user data (available to the server as RemoteClient.UserData)
+	clientID,		// ulong ID used to uniquely identify this client
+	userData		// byte[], up to 256 bytes of arbitrary user data (available to the server as RemoteClient.UserData)
 );
 ```
