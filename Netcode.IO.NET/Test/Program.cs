@@ -22,8 +22,8 @@ namespace Test
 
 		static void Main(string[] args)
 		{
-			startClient();
-			// startServer();
+			//startClient();
+			startServer();
 		}
 
 		private static void startClient()
@@ -88,7 +88,7 @@ namespace Test
 				0x1122334455667788L,
 				_privateKey
 				);
-			server.LogLevel = NetcodeLogLevel.Info;
+			server.LogLevel = NetcodeLogLevel.Debug;
 			server.Start();
 			Console.WriteLine("Server started");
 

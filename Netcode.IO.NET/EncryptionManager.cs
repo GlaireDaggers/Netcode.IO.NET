@@ -135,6 +135,7 @@ namespace NetcodeIO.NET
 				return false;
 
 			encryptionMappings[index].LastAccessTime = time;
+			encryptionMappings[index].ExpireTime = time + Defines.NETCODE_TIMEOUT_SECONDS;
 			return true;
 		}
 

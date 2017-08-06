@@ -382,6 +382,8 @@ namespace NetcodeIO.NET
 			{
 				NetcodePacketHeader packetHeader = new NetcodePacketHeader();
 				packetHeader.Read(reader);
+
+				Console.WriteLine("Got datagram: " + packetHeader.PacketType.ToString());
 				
 				int length = datagram.payloadSize - (int)reader.ReadPosition;
 

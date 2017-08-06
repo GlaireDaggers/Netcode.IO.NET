@@ -422,7 +422,7 @@ namespace NetcodeIO.NET
 			{
 				packetLen = PacketIO.ReadPacketData(Header, stream, length, protocolID, key, packetBuffer);
 			}
-			catch
+			catch(System.Exception e)
 			{
 				BufferPool.ReturnBuffer(packetBuffer);
 				return false;
