@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace NetcodeIO.NET.Internal
+﻿namespace NetcodeIO.NET.Internal
 {
 	/// <summary>
 	/// Helper class for protecting against packet replay

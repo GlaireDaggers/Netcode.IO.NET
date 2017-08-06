@@ -79,8 +79,10 @@ namespace NetcodeIO.NET
 	/// <summary>
 	/// Class for connecting to and communicating with Netcode.IO servers
 	/// </summary>
-	public class Client
+	public sealed class Client
 	{
+		#region Public Fields/Properties
+
 		/// <summary>
 		/// Gets or sets the internal tickrate of the client in ticks per second. Value must be between 1 and 1000
 		/// </summary>
@@ -140,34 +142,40 @@ namespace NetcodeIO.NET
 		/// </summary>
 		public event ClientMessageReceivedHandler OnMessageReceived;
 
-		protected int tickrate = 60;
+		#endregion
 
-		protected Thread socketThread;
-		protected Thread workerThread;
+		#region Private fields
 
-		protected Socket socket;
+		private int tickrate = 60;
 
-		protected bool isRunning = false;
+		private Thread socketThread;
+		private Thread workerThread;
 
-		protected ClientState state;
-		internal DatagramQueue datagramQueue = new DatagramQueue();
+		private Socket socket;
 
-		protected double lastResponseTime;
+		private bool isRunning = false;
 
-		protected uint clientIndex;
-		protected uint maxSlots;
-		protected byte[] clientToServerKey;
-		protected byte[] serverToClientKey;
+		private ClientState state;
+		private DatagramQueue datagramQueue = new DatagramQueue();
 
-		protected ulong protocolID;
-		protected ulong nextPacketSequence = 0;
+		private double lastResponseTime;
 
-		NetcodePublicConnectToken connectToken;
-		NetcodeConnectionChallengeResponsePacket challengeResponse;
-		protected Queue<EndPoint> connectServers = new Queue<EndPoint>();
-		protected EndPoint currentServerEndpoint;
+		private uint clientIndex;
+		private uint maxSlots;
+		private byte[] clientToServerKey;
+		private byte[] serverToClientKey;
 
-		internal NetcodeReplayProtection replayProtection;
+		private ulong protocolID;
+		private ulong nextPacketSequence = 0;
+
+		private NetcodePublicConnectToken connectToken;
+		private NetcodeConnectionChallengeResponsePacket challengeResponse;
+		private Queue<EndPoint> connectServers = new Queue<EndPoint>();
+		private EndPoint currentServerEndpoint;
+
+		private NetcodeReplayProtection replayProtection;
+
+		#endregion
 
 		public Client(ulong protocolID)
 		{
@@ -177,6 +185,8 @@ namespace NetcodeIO.NET
 			replayProtection = new NetcodeReplayProtection();
 			replayProtection.Reset();
 		}
+
+		#region Public Methods
 
 		/// <summary>
 		/// Disconnect the client from the server, if connected
@@ -275,7 +285,11 @@ namespace NetcodeIO.NET
 			}, clientToServerKey);
 		}
 
-		protected void createSocket(EndPoint endpoint)
+		#endregion
+
+		#region Core
+
+		private void createSocket(EndPoint endpoint)
 		{
 			this.socket = new Socket(currentServerEndpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 			var socketEndpoint = new IPEndPoint(currentServerEndpoint.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, 0);
@@ -285,7 +299,7 @@ namespace NetcodeIO.NET
 			socketThread.Start();
 		}
 
-		protected void stopSocket()
+		private void stopSocket()
 		{
 			if (socket != null)
 			{
@@ -294,7 +308,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		protected void runSocket()
+		private void runSocket()
 		{
 			while (isRunning)
 			{
@@ -309,8 +323,8 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		protected double timer = 0.0;
-		protected void clientTick()
+		private double timer = 0.0;
+		private void clientTick()
 		{
 			while (isRunning)
 			{
@@ -343,7 +357,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		protected bool checkTimer(int customTickrate)
+		private bool checkTimer(int customTickrate)
 		{
 			if (timer <= 0.0)
 			{
@@ -354,12 +368,12 @@ namespace NetcodeIO.NET
 			return false;
 		}
 
-		protected void consumeTimer()
+		private void consumeTimer()
 		{
 			timer -= (1.0 / tickrate);
 		}
 
-		internal void processDatagram(Datagram datagram)
+		private void processDatagram(Datagram datagram)
 		{
 			if (!MiscUtils.AddressEqual(datagram.sender, currentServerEndpoint))
 				return;
@@ -392,10 +406,12 @@ namespace NetcodeIO.NET
 			}
 		}
 
+		#endregion
+
 		#region states
 
-		double keepAliveTimer = 0.0;
-		protected void connected()
+		private double keepAliveTimer = 0.0;
+		private void connected()
 		{
 			keepAliveTimer += (1.0 / tickrate);
 			if (keepAliveTimer >= 0.1)
@@ -411,8 +427,8 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		double connectionTimer = 0.0;
-		protected void sendingConnectionRequest()
+		private double connectionTimer = 0.0;
+		private void sendingConnectionRequest()
 		{
 			// check and make sure connect token hasn't expired while we've been trying to connect
 			if (DateTime.Now.ToUnixTimestamp() >= connectToken.ExpireTimestamp)
@@ -440,7 +456,7 @@ namespace NetcodeIO.NET
 			consumeTimer();
 		}
 
-		protected void sendingChallengeResponse()
+		private void sendingChallengeResponse()
 		{
 			connectionTimer += (1.0 / tickrate);
 
@@ -464,7 +480,7 @@ namespace NetcodeIO.NET
 
 		#region Process messages
 
-		internal void processConnectionDisconnect(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
+		private void processConnectionDisconnect(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
 		{
 			if (checkReplay(header)) return;
 			if (this.state != ClientState.Connected) return;
@@ -477,7 +493,7 @@ namespace NetcodeIO.NET
 			Disconnect();
 		}
 
-		internal void processConnectionPayload(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
+		private void processConnectionPayload(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
 		{
 			if (checkReplay(header)) return;
 			if (this.state != ClientState.Connected) return;
@@ -493,7 +509,7 @@ namespace NetcodeIO.NET
 			payloadPacket.Release();
 		}
 
-		internal void processConnectionKeepAlive(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
+		private void processConnectionKeepAlive(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
 		{
 			if (checkReplay(header)) return;
 
@@ -512,7 +528,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		internal void processConnectionDenied(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
+		private void processConnectionDenied(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
 		{
 			var decryptKey = serverToClientKey;
 			var denyPacket = new NetcodeDenyConnectionPacket() { Header = header };
@@ -529,7 +545,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		internal void processChallengePacket(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
+		private void processChallengePacket(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
 		{
 			var decryptKey = serverToClientKey;
 			var challengePacket = new NetcodeConnectionChallengeResponsePacket() { Header = header };
@@ -552,7 +568,7 @@ namespace NetcodeIO.NET
 
 		#region Send methods
 
-		protected void changeState(ClientState newState)
+		private void changeState(ClientState newState)
 		{
 			if (newState != state)
 			{
@@ -562,7 +578,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		protected void connectionMoveNextEndpoint()
+		private void connectionMoveNextEndpoint()
 		{
 			timer = 0.0;
 			connectionTimer = 0.0;
@@ -585,7 +601,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		internal void sendKeepAlive()
+		private void sendKeepAlive()
 		{
 			serializePacket(new NetcodePacketHeader() { PacketType = NetcodePacketType.ConnectionKeepAlive }, (writer) =>
 			 {
@@ -594,7 +610,7 @@ namespace NetcodeIO.NET
 			 }, clientToServerKey);
 		}
 
-		internal void sendDisconnect()
+		private void sendDisconnect()
 		{
 			for (int i = 0; i < Defines.NUM_DISCONNECT_PACKETS; i++)
 			{
@@ -604,7 +620,7 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		internal void sendConnectionResponse(EndPoint server)
+		private void sendConnectionResponse(EndPoint server)
 		{
 			serializePacket(challengeResponse.Header, (writer) =>
 		   {
@@ -612,7 +628,7 @@ namespace NetcodeIO.NET
 		   }, clientToServerKey);
 		}
 
-		internal void sendConnectionRequest(EndPoint server)
+		private void sendConnectionRequest(EndPoint server)
 		{
 			byte[] packetBuffer = BufferPool.GetBuffer(1 + 13 + 8 + 8 + 8 + Defines.NETCODE_CONNECT_TOKEN_PRIVATE_BYTES);
 			using (var stream = ByteArrayReaderWriter.Get(packetBuffer))
@@ -633,7 +649,7 @@ namespace NetcodeIO.NET
 
 		#region Util methods
 
-		internal void sendPacket(NetcodePacketHeader packetHeader, byte[] packetData, int packetDataLen, byte[] key)
+		private void sendPacket(NetcodePacketHeader packetHeader, byte[] packetData, int packetDataLen, byte[] key)
 		{
 			// assign a sequence number to this packet
 			packetHeader.SequenceNumber = this.nextPacketSequence++;
@@ -661,7 +677,7 @@ namespace NetcodeIO.NET
 			BufferPool.ReturnBuffer(encryptedPacketBuffer);
 		}
 
-		internal void serializePacket(NetcodePacketHeader packetHeader, Action<ByteArrayReaderWriter> write, byte[] key)
+		private void serializePacket(NetcodePacketHeader packetHeader, Action<ByteArrayReaderWriter> write, byte[] key)
 		{
 			byte[] tempPacket = BufferPool.GetBuffer(2048);
 			int writeLen = 0;
@@ -675,7 +691,7 @@ namespace NetcodeIO.NET
 			BufferPool.ReturnBuffer(tempPacket);
 		}
 
-		bool checkReplay(NetcodePacketHeader packetHeader)
+		private bool checkReplay(NetcodePacketHeader packetHeader)
 		{
 			return replayProtection.AlreadyReceived(packetHeader.SequenceNumber);
 		}

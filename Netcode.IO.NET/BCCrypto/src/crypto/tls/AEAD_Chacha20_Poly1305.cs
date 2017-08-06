@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Utilities;
@@ -59,7 +55,13 @@ namespace Org.BouncyCastle.Crypto.TlsExt
 			Array.Copy(ciphertext, offset + plaintextLength, receivedMac, 0, receivedMac.Length);
 
 			if (!Arrays.ConstantTimeAreEqual(calculatedMac, receivedMac))
+			{
+				BufferPool.ReturnBuffer(calculatedMac);
+				BufferPool.ReturnBuffer(receivedMac);
+				BufferPool.ReturnBuffer(firstBlock);
+
 				throw new TlsFatalAlert(AlertDescription.bad_record_mac);
+			}
 
 			BufferPool.ReturnBuffer(calculatedMac);
 			BufferPool.ReturnBuffer(receivedMac);
