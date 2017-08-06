@@ -1,0 +1,5 @@
+D:\Projects\NET\Netcode.IO.Net\Netcode.IO.NET\BCCrypto\obj\Debug\BCCrypto.csprojResolveAssemblyReference.cache
+D:\Projects\NET\Netcode.IO.Net\Netcode.IO.NET\BCCrypto\bin\Debug\BCCrypto.dll
+D:\Projects\NET\Netcode.IO.Net\Netcode.IO.NET\BCCrypto\bin\Debug\BCCrypto.pdb
+D:\Projects\NET\Netcode.IO.Net\Netcode.IO.NET\BCCrypto\obj\Debug\BCCrypto.dll
+D:\Projects\NET\Netcode.IO.Net\Netcode.IO.NET\BCCrypto\obj\Debug\BCCrypto.pdb
