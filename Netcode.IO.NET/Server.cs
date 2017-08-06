@@ -310,6 +310,9 @@ namespace NetcodeIO.NET
 					double timeRemaining = DateTime.Now.GetTotalSeconds() - clientSlots[i].lastResponseTime;
 					if ((DateTime.Now.GetTotalSeconds() - clientSlots[i].lastResponseTime) >= Defines.NETCODE_TIMEOUT_SECONDS)
 					{
+						if (OnClientDisconnected != null)
+							OnClientDisconnected(clientSlots[i]);
+
 						log("Client {0} timed out", NetcodeLogLevel.Debug, clientSlots[i].RemoteEndpoint.ToString());
 						disconnectClient(clientSlots[i]);
 					}
@@ -693,6 +696,15 @@ namespace NetcodeIO.NET
 		// sends a disconnect packet to the client
 		private void disconnectClient(RemoteClient client)
 		{
+			for (int i = 0; i < clientSlots.Length; i++)
+			{
+				if (clientSlots[i] == client)
+				{
+					clientSlots[i] = null;
+					break;
+				}
+			}
+
 			var cryptIdx = encryptionManager.FindEncryptionMapping(client.RemoteEndpoint, DateTime.Now.GetTotalSeconds());
 			if (cryptIdx == -1)
 			{
