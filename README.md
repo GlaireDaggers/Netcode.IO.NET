@@ -67,6 +67,7 @@ Client client = new Client( ulong protocolID ); // must be the same ulong protoc
 To listen for various events:
 ```c#
 // Called when the client's state has changed
+// Use this to detect when a client has connected to a server, or has been disconnected from a server, or connection times out, etc.
 client.OnStateChanged += clientStateChanged;			// void( ClientState state )
 
 // Called when a payload has been received from the server
