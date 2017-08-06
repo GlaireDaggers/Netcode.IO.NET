@@ -14,9 +14,9 @@ Most of the API resides in the namespace `NetcodeIO.NET`
 To create and start a new server:
 ```c#
 Server server = new Server(
-	256,			// int maximum number of clients which can connect to this server at one time
-	"127.0.0.1", 40000,	// string public address and int port clients will connect to
-	0x1122334455667788L,	// ulong protocol ID shared between clients and server
+	maxClients,		// int maximum number of clients which can connect to this server at one time
+	publicAddress, port,	// string public address and int port clients will connect to
+	protocolID,		// ulong protocol ID shared between clients and server
 	privateKeyBytes		// byte[32] private crypto key shared between backend servers
 );
 server.Start();			// start the server running
