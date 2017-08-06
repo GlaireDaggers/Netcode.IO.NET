@@ -193,7 +193,7 @@ namespace NetcodeIO.NET
 		/// </summary>
 		public void Disconnect()
 		{
-			if (state == ClientState.Disconnected)
+			if (state != ClientState.Disconnected)
 				sendDisconnect();
 
 			isRunning = false;
