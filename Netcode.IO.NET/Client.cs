@@ -156,6 +156,8 @@ namespace NetcodeIO.NET
 		private bool isRunning = false;
 
 		private ClientState state;
+		private ClientState pendingDisconnectState;
+
 		private DatagramQueue datagramQueue = new DatagramQueue();
 
 		private double lastResponseTime;
@@ -181,6 +183,7 @@ namespace NetcodeIO.NET
 		{
 			this.protocolID = protocolID;
 			state = ClientState.Disconnected;
+			pendingDisconnectState = ClientState.Disconnected;
 
 			replayProtection = new NetcodeReplayProtection();
 			replayProtection.Reset();
@@ -193,22 +196,7 @@ namespace NetcodeIO.NET
 		/// </summary>
 		public void Disconnect()
 		{
-			if (state != ClientState.Disconnected)
-				sendDisconnect();
-
-			isRunning = false;
-
-			stopSocket();
-
-			datagramQueue.Clear();
-			connectServers.Clear();
-
-			currentServerEndpoint = null;
-			nextPacketSequence = 0;
-			clientToServerKey = null;
-			serverToClientKey = null;
-
-			changeState(ClientState.Disconnected);
+			disconnect(ClientState.Disconnected);
 		}
 
 		/// <summary>
@@ -308,6 +296,27 @@ namespace NetcodeIO.NET
 			}
 		}
 
+		private void disconnect(ClientState disconnectState)
+		{
+			if (state != ClientState.Disconnected)
+				sendDisconnect();
+
+			isRunning = false;
+			pendingDisconnectState = ClientState.Disconnected;
+
+			stopSocket();
+
+			datagramQueue.Clear();
+			connectServers.Clear();
+
+			currentServerEndpoint = null;
+			nextPacketSequence = 0;
+			clientToServerKey = null;
+			serverToClientKey = null;
+
+			changeState(disconnectState);
+		}
+
 		private void runSocket()
 		{
 			while (isRunning)
@@ -377,12 +386,12 @@ namespace NetcodeIO.NET
 		{
 			if (!MiscUtils.AddressEqual(datagram.sender, currentServerEndpoint))
 				return;
-			
+
 			using (var reader = ByteArrayReaderWriter.Get(datagram.payload))
 			{
 				NetcodePacketHeader packetHeader = new NetcodePacketHeader();
 				packetHeader.Read(reader);
-				
+
 				int length = datagram.payloadSize - (int)reader.ReadPosition;
 
 				switch (packetHeader.PacketType)
@@ -422,8 +431,7 @@ namespace NetcodeIO.NET
 
 			if ((DateTime.Now.GetTotalSeconds() - lastResponseTime) >= Defines.NETCODE_TIMEOUT_SECONDS)
 			{
-				Disconnect();
-				changeState(ClientState.ConnectionTimedOut);
+				disconnect(ClientState.ConnectionTimedOut);
 			}
 		}
 
@@ -433,8 +441,7 @@ namespace NetcodeIO.NET
 			// check and make sure connect token hasn't expired while we've been trying to connect
 			if (DateTime.Now.ToUnixTimestamp() >= connectToken.ExpireTimestamp)
 			{
-				changeState(ClientState.ConnectTokenExpired);
-				stopSocket();
+				disconnect(ClientState.ConnectTokenExpired);
 				return;
 			}
 
@@ -445,11 +452,11 @@ namespace NetcodeIO.NET
 				// send a connection request 10 times per second
 				sendConnectionRequest(currentServerEndpoint);
 			}
-			
+
 			// if we don't get a response within timeout, move on.
 			if ((int)connectionTimer >= connectToken.TimeoutSeconds)
 			{
-				changeState(ClientState.ConnectionRequestTimedOut);
+				pendingDisconnectState = ClientState.ConnectionRequestTimedOut;
 				connectionMoveNextEndpoint();
 			}
 
@@ -469,7 +476,7 @@ namespace NetcodeIO.NET
 			// if we don't get a response within timeout, move on.
 			if ((int)connectionTimer >= connectToken.TimeoutSeconds)
 			{
-				changeState(ClientState.ChallengeResponseTimedOut);
+				pendingDisconnectState = ClientState.ChallengeResponseTimedOut;
 				connectionMoveNextEndpoint();
 			}
 
@@ -503,9 +510,10 @@ namespace NetcodeIO.NET
 			if (!payloadPacket.Read(stream, length, decryptKey, protocolID))
 				return;
 
+			lastResponseTime = DateTime.Now.GetTotalSeconds();
 			if (OnMessageReceived != null)
 				OnMessageReceived(payloadPacket.Payload, payloadPacket.Length);
-
+			
 			payloadPacket.Release();
 		}
 
@@ -518,7 +526,8 @@ namespace NetcodeIO.NET
 			if (!keepAlive.Read(stream, length, decryptKey, protocolID))
 				return;
 
-			lastResponseTime = DateTime.Now.GetTotalSeconds();
+			if (this.state == ClientState.Connected || this.state == ClientState.SendingChallengeResponse)
+				lastResponseTime = DateTime.Now.GetTotalSeconds();
 
 			if (this.state == ClientState.SendingChallengeResponse)
 			{
@@ -535,14 +544,12 @@ namespace NetcodeIO.NET
 			if (!denyPacket.Read(stream, length, decryptKey, protocolID))
 				return;
 
-			if (state == ClientState.SendingConnectionRequest || state == ClientState.SendingChallengeResponse)
-			{
-				// move onto the next server
-				timer = 0.0;
-				connectionTimer = 0.0;
-				changeState(ClientState.ConnectionDenied);
-				connectionMoveNextEndpoint();
-			}
+			pendingDisconnectState = ClientState.ConnectionDenied;
+
+			// move onto the next server
+			timer = 0.0;
+			connectionTimer = 0.0;
+			connectionMoveNextEndpoint();
 		}
 
 		private void processChallengePacket(NetcodePacketHeader header, int length, ByteArrayReaderWriter stream)
@@ -588,16 +595,12 @@ namespace NetcodeIO.NET
 				currentServerEndpoint = connectServers.Dequeue();
 				stopSocket();
 				createSocket(currentServerEndpoint);
-
-				state = ClientState.SendingConnectionRequest;
+				
+				changeState(ClientState.SendingConnectionRequest);
 			}
 			else
 			{
-				if (state == ClientState.ConnectionRequestTimedOut)
-				{
-					stopSocket();
-					state = ClientState.ConnectionTimedOut;
-				}
+				disconnect(pendingDisconnectState);
 			}
 		}
 

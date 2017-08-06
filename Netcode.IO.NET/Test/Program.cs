@@ -22,8 +22,8 @@ namespace Test
 
 		static void Main(string[] args)
 		{
-			//startClient();
-			startServer();
+			startClient();
+			//startServer();
 		}
 
 		private static void startClient()
