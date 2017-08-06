@@ -89,7 +89,7 @@ To disconnect a client:
 client.Disconnect();
 ```
 
-## TokenFactory
+## TokenFactory API
 TokenFactory can be used to generate the public connect tokens used by clients to connect to game servers.
 To create a new TokenFactory:
 ```c#
