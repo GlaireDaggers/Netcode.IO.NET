@@ -68,7 +68,7 @@ namespace Test
 				testPacketWriter.Write((uint)0xAABBCCDD);
 			}
 
-			client = new Client(0x1122334455667788L);
+			client = new Client();
 
 			client.OnStateChanged += Client_OnStateChanged;
 			client.OnMessageReceived += Client_OnMessageReceived;

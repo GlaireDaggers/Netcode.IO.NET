@@ -166,8 +166,7 @@ namespace NetcodeIO.NET
 		private uint maxSlots;
 		private byte[] clientToServerKey;
 		private byte[] serverToClientKey;
-
-		private ulong protocolID;
+		
 		private ulong nextPacketSequence = 0;
 
 		private NetcodePublicConnectToken connectToken;
@@ -179,9 +178,8 @@ namespace NetcodeIO.NET
 
 		#endregion
 
-		public Client(ulong protocolID)
+		public Client()
 		{
-			this.protocolID = protocolID;
 			state = ClientState.Disconnected;
 			pendingDisconnectState = ClientState.Disconnected;
 
@@ -226,12 +224,6 @@ namespace NetcodeIO.NET
 					changeState(ClientState.InvalidConnectToken);
 					return;
 				}
-			}
-
-			if (tokenData.ProtocolID != protocolID)
-			{
-				changeState(ClientState.InvalidConnectToken);
-				return;
 			}
 
 			if (tokenData.CreateTimestamp >= tokenData.ExpireTimestamp)
@@ -494,7 +486,7 @@ namespace NetcodeIO.NET
 
 			var decryptKey = serverToClientKey;
 			var disconnectPacket = new NetcodeDisconnectPacket() { Header = header };
-			if (!disconnectPacket.Read(stream, length, decryptKey, protocolID))
+			if (!disconnectPacket.Read(stream, length, decryptKey, connectToken.ProtocolID))
 				return;
 
 			Disconnect();
@@ -507,7 +499,7 @@ namespace NetcodeIO.NET
 
 			var decryptKey = serverToClientKey;
 			var payloadPacket = new NetcodePayloadPacket() { Header = header };
-			if (!payloadPacket.Read(stream, length, decryptKey, protocolID))
+			if (!payloadPacket.Read(stream, length, decryptKey, connectToken.ProtocolID))
 				return;
 
 			lastResponseTime = DateTime.Now.GetTotalSeconds();
@@ -523,7 +515,7 @@ namespace NetcodeIO.NET
 
 			var decryptKey = serverToClientKey;
 			var keepAlive = new NetcodeKeepAlivePacket() { Header = header };
-			if (!keepAlive.Read(stream, length, decryptKey, protocolID))
+			if (!keepAlive.Read(stream, length, decryptKey, connectToken.ProtocolID))
 				return;
 
 			if (this.state == ClientState.Connected || this.state == ClientState.SendingChallengeResponse)
@@ -541,7 +533,7 @@ namespace NetcodeIO.NET
 		{
 			var decryptKey = serverToClientKey;
 			var denyPacket = new NetcodeDenyConnectionPacket() { Header = header };
-			if (!denyPacket.Read(stream, length, decryptKey, protocolID))
+			if (!denyPacket.Read(stream, length, decryptKey, connectToken.ProtocolID))
 				return;
 
 			pendingDisconnectState = ClientState.ConnectionDenied;
@@ -556,7 +548,7 @@ namespace NetcodeIO.NET
 		{
 			var decryptKey = serverToClientKey;
 			var challengePacket = new NetcodeConnectionChallengeResponsePacket() { Header = header };
-			if (!challengePacket.Read(stream, length, decryptKey, protocolID))
+			if (!challengePacket.Read(stream, length, decryptKey, connectToken.ProtocolID))
 				return;
 
 			if (state == ClientState.SendingConnectionRequest)
@@ -638,7 +630,7 @@ namespace NetcodeIO.NET
 			{
 				stream.Write((byte)0);
 				stream.WriteASCII(Defines.NETCODE_VERSION_INFO_STR);
-				stream.Write(protocolID);
+				stream.Write(connectToken.ProtocolID);
 				stream.Write(connectToken.ExpireTimestamp);
 				stream.Write(connectToken.ConnectTokenSequence);
 				stream.Write(connectToken.PrivateConnectTokenBytes);
@@ -659,7 +651,7 @@ namespace NetcodeIO.NET
 
 			// encrypt packet data
 			byte[] encryptedPacketBuffer = BufferPool.GetBuffer(2048);
-			int encryptedBytes = PacketIO.EncryptPacketData(packetHeader, protocolID, packetData, packetDataLen, key, encryptedPacketBuffer);
+			int encryptedBytes = PacketIO.EncryptPacketData(packetHeader, connectToken.ProtocolID, packetData, packetDataLen, key, encryptedPacketBuffer);
 
 			int packetLen = 0;
 
