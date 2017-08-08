@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using System.Security.Cryptography;
+
 namespace NetcodeIO.NET.Utils
 {
 	/// <summary>
@@ -10,14 +12,14 @@ namespace NetcodeIO.NET.Utils
 	/// </summary>
 	public static class KeyUtils
 	{
-		private static Random rand = new Random();
+		private static RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
 
 		/// <summary>
 		/// Generate a random key
 		/// </summary>
 		public static void GenerateKey(byte[] keyBuffer)
 		{
-			rand.NextBytes(keyBuffer);
+			rng.GetBytes(keyBuffer);
 		}
 	}
 }
