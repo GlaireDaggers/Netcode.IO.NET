@@ -61,7 +61,7 @@ server.Stop();
 ## Client API
 To create a new client:
 ```c#
-Client client = new Client( ulong protocolID ); // must be the same ulong protocol ID passed to the Server constructor
+Client client = new Client();
 ```
 
 To listen for various events:
