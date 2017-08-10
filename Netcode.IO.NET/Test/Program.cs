@@ -29,7 +29,7 @@ namespace Test
 		private static void startClient()
 		{
 			// get token
-			var webRequest = WebRequest.Create("http://127.0.0.1:8080/token");
+			/*var webRequest = WebRequest.Create("http://127.0.0.1:8080/token");
 			webRequest.Credentials = CredentialCache.DefaultCredentials;
 			HttpWebResponse response;
 
@@ -60,7 +60,13 @@ namespace Test
 			dataStream.Close();
 			response.Close();
 
-			byte[] connectToken = System.Convert.FromBase64String(responseStr);
+			byte[] connectToken = System.Convert.FromBase64String(responseStr);*/
+			TokenFactory factory = new TokenFactory(0x1122334455667788L, _privateKey);
+			byte[] connectToken = factory.GenerateConnectToken(new IPEndPoint[] { new IPEndPoint(IPAddress.Parse("127.0.0.1"), 40000) },
+				30,
+				1UL,
+				1UL,
+				new byte[256]);
 
 			testPacket = new byte[256];
 			using (var testPacketWriter = ByteArrayReaderWriter.Get(testPacket))

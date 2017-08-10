@@ -248,6 +248,9 @@ namespace NetcodeIO.NET
 
 		public void Write(ByteArrayReaderWriter writer)
 		{
+			writer.WriteASCII(Defines.NETCODE_VERSION_INFO_STR);
+			writer.Write(ProtocolID);
+
 			writer.Write(CreateTimestamp);
 			writer.Write(ExpireTimestamp);
 			writer.Write(ConnectTokenSequence);
