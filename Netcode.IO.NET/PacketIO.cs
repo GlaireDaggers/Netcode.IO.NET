@@ -194,7 +194,7 @@ namespace NetcodeIO.NET.Internal
 				writer.Write(sequence);
 			}
 
-			var ret = AEAD_Chacha20_Poly1305.Encrypt(privateConnectToken, 0, len, additionalData, nonce, key, outBuffer);
+			var ret = AEAD_Chacha20_Poly1305.Encrypt(privateConnectToken, 0, len - Defines.MAC_SIZE, additionalData, nonce, key, outBuffer);
 
 			BufferPool.ReturnBuffer(additionalData);
 			BufferPool.ReturnBuffer(nonce);
