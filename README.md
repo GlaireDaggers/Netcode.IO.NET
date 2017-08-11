@@ -110,3 +110,8 @@ tokenFactory.GenerateConnectToken(
 	userData		// byte[], up to 256 bytes of arbitrary user data (available to the server as RemoteClient.UserData)
 );
 ```
+
+# A note about UDP and unreliability
+Netcode.IO.NET is a pure port of the Netcode.IO protocol - nothing more, and nothing less.
+At its heart, Netcode.IO is an encryption and connection based abstraction on top of UDP. And, just like UDP, it has zero guarantees about reliability. Your messages may not make it, and they may not make it in order. That's just a fact of the internet.
+That said, any game will almost certainly need some kind of reliability layer. To that end, my [ReliableNetcode.NET](https://github.com/KillaMaaki/ReliableNetcode.NET) project provides an agnostic and easy to use reliability layer you can use to add this functionality to your game.
