@@ -332,6 +332,8 @@ namespace NetcodeIO.NET
 
 		internal void Tick(double time)
 		{
+			if (this.socket == null) return;
+
 			this.socket.Pump();
 
 			this.dt = time - this.time;

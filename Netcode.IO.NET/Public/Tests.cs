@@ -534,10 +534,10 @@ namespace NetcodeIO.NET.Tests
 
 					clientID++;
 					tokenSequence++;
-					
+
 					clients[j].Connect(connectToken, false);
 				}
-				
+
 				var sw = new Stopwatch();
 
 				// make sure all clients can connect
@@ -1345,6 +1345,157 @@ namespace NetcodeIO.NET.Tests
 
 			client.Disconnect();
 			server.Stop();
+		}
+
+		public static void SoakTestClientServerConnection(int testDurationMinutes = -1)
+		{
+			double time = 0.0;
+			double dt = 1.0 / 10.0;
+
+			NetworkSimulatorSocketManager socketMgr = new NetworkSimulatorSocketManager();
+			socketMgr.LatencyMS = 250;
+			socketMgr.JitterMS = 250;
+			socketMgr.PacketLossChance = 5;
+			socketMgr.DuplicatePacketChance = 10;
+			socketMgr.AutoTime = false;
+
+			TokenFactory tokenFactory = new TokenFactory(TEST_PROTOCOL_ID, _privateKey);
+
+			ulong nextTokenSequence = 0;
+			ulong nextClientID = 0;
+
+			const int NUM_SERVERS = 32;
+			const int NUM_CLIENTS = 1024;
+
+			const int BASE_SERVER_PORT = 40000;
+			const int BASE_CLIENT_PORT = 1000;
+
+			Client[] clients = new Client[NUM_CLIENTS];
+			Server[] servers = new Server[NUM_SERVERS];
+
+			IPEndPoint[] serverEndpoints = new IPEndPoint[NUM_SERVERS];
+
+			Dictionary<Client, int> receivedPackets = new Dictionary<Client, int>();
+
+			Random rand = new Random();
+
+			// create and start servers
+			for (int i = 0; i < servers.Length; i++)
+			{
+				IPEndPoint serverEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), BASE_SERVER_PORT + i);
+				serverEndpoints[i] = serverEndpoint;
+
+				var socket = socketMgr.CreateContext(serverEndpoint);
+
+				int slots = rand.Next(0, NUM_CLIENTS) + 1;
+				var server = new Server(socket, slots, "127.0.0.1", BASE_SERVER_PORT + i, TEST_PROTOCOL_ID, _privateKey);
+				server.Start(false);
+				server.time = time;
+
+				server.OnClientMessageReceived += (sender, payload, size) =>
+				{
+					// send payload back to client
+					sender.SendPayload(payload, size);
+				};
+
+				servers[i] = server;
+			}
+
+			Dictionary<Client, bool> clientsConnected = new Dictionary<Client, bool>();
+
+			// create clients
+			for (int i = 0; i < clients.Length; i++)
+			{
+				IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), BASE_CLIENT_PORT + i);
+
+				Client client = new Client((endpoint) =>
+				{
+					var socket = socketMgr.CreateContext(clientEndpoint);
+					socket.Bind(clientEndpoint);
+
+					return socket;
+				});
+
+				// keep track of how many packets the client has received from the server
+				client.OnMessageReceived += (payload, size) =>
+				{
+					receivedPackets[client]++;
+				};
+
+				// if the client disconnects from a server, reset packets received
+				client.OnStateChanged += (state) =>
+				{
+					if (state == ClientState.Disconnected)
+						receivedPackets[client] = 0;
+					else if (state == ClientState.Connected)
+						clientsConnected[client] = true;
+				};
+
+				clientsConnected.Add(client, false);
+				receivedPackets.Add(client, 0);
+
+				client.time = time;
+
+				clients[i] = client;
+			}
+
+			bool runTest = true;
+
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+
+			// now keep running the test!
+			while (runTest)
+			{
+				time += dt;
+
+				socketMgr.Update(time);
+
+				foreach (Server server in servers)
+					server.Tick(time);
+
+				foreach (Client client in clients)
+					client.Tick(time);
+
+				// iterate over each client:
+				// - if state is disconnected, grab a new connect token and connect
+				// - if state is connected: if packets received is >=10, disconnect. otherwise, send a packet
+
+				foreach (Client client in clients)
+				{
+					if (client.State == ClientState.Disconnected)
+					{
+						var connectToken = tokenFactory.GenerateConnectToken(serverEndpoints, time, serverEndpoints.Length * 5, 5, nextTokenSequence++, nextClientID++, new byte[256]);
+						client.Connect(connectToken, false);
+					}
+					else if (client.State == ClientState.Connected)
+					{
+						if (receivedPackets[client] >= 10)
+							client.Disconnect();
+						else
+						{
+							byte[] payload = new byte[100];
+							client.Send(payload, 100);
+						}
+					}
+					else if (client.State < ClientState.Disconnected)
+						break;
+				}
+
+				if (testDurationMinutes > 0)
+				{
+					runTest = sw.ElapsedMilliseconds <= (1000 * 60 * testDurationMinutes);
+				}
+			}
+
+			foreach (Client client in clients)
+			{
+				assert(client.State >= ClientState.Disconnected, "Client in bad state: " + client.State);
+				assert(clientsConnected[client] == true, "Client never connected!");
+			}
+
+			foreach (Server server in servers)
+				server.Stop();
 		}
 
 		public static void TestConnectionRequestPacket()

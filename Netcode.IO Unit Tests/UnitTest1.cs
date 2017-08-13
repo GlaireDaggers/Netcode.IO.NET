@@ -192,5 +192,11 @@ namespace Netcode_IO_Unit_Tests
 
 			sw.Stop();
 		}
+
+		[TestCategory("Soak Connection"), TestMethod]
+		public void SoakClientServerRandomConnection()
+		{
+			Tests.SoakTestClientServerConnection(30);
+		}
 	}
 }
