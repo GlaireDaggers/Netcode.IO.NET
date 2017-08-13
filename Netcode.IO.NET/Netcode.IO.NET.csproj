@@ -41,23 +41,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client.cs" />
-    <Compile Include="ConnectTokenData.cs" />
-    <Compile Include="DatagramQueue.cs" />
-    <Compile Include="Defines.cs" />
-    <Compile Include="EncryptionManager.cs" />
-    <Compile Include="NetcodeLogLevel.cs" />
-    <Compile Include="NetcodePacket.cs" />
-    <Compile Include="NetcodeReplayProtection.cs" />
-    <Compile Include="PacketIO.cs" />
-    <Compile Include="Server.cs" />
+    <Compile Include="Public\Client.cs" />
+    <Compile Include="Core\ConnectTokenData.cs" />
+    <Compile Include="Core\DatagramQueue.cs" />
+    <Compile Include="Core\Defines.cs" />
+    <Compile Include="Core\EncryptionManager.cs" />
+    <Compile Include="Core\NetcodeLogLevel.cs" />
+    <Compile Include="Core\NetcodePacket.cs" />
+    <Compile Include="Core\NetcodeReplayProtection.cs" />
+    <Compile Include="Core\PacketIO.cs" />
+    <Compile Include="Public\Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TokenFactory.cs" />
+    <Compile Include="Public\Tests.cs" />
+    <Compile Include="Public\TokenFactory.cs" />
     <Compile Include="Utils\BufferPool.cs" />
     <Compile Include="Utils\DateTimeEx.cs" />
     <Compile Include="Utils\IO\ByteArrayReader.cs" />
     <Compile Include="Utils\IO\ByteStream.cs" />
+    <Compile Include="Utils\IO\SocketContext.cs" />
     <Compile Include="Utils\KeyUtils.cs" />
+    <Compile Include="Utils\LockFreeQueue.cs" />
     <Compile Include="Utils\MiscUtils.cs" />
   </ItemGroup>
   <ItemGroup>

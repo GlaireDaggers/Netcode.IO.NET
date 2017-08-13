@@ -20,13 +20,16 @@ namespace NetcodeIO.NET.Utils.IO
 		{
 			ByteArrayReaderWriter reader = null;
 
-			if (readerPool.Count > 0)
+			lock (readerPool)
 			{
-				reader = readerPool.Dequeue();
-			}
-			else
-			{
-				reader = new ByteArrayReaderWriter();
+				if (readerPool.Count > 0)
+				{
+					reader = readerPool.Dequeue();
+				}
+				else
+				{
+					reader = new ByteArrayReaderWriter();
+				}
 			}
 
 			reader.SetStream(byteArray);
@@ -38,7 +41,11 @@ namespace NetcodeIO.NET.Utils.IO
 		/// </summary>
 		public static void Release(ByteArrayReaderWriter reader)
 		{
-			readerPool.Enqueue(reader);
+			if (reader == null)
+				throw new NullReferenceException();
+
+			lock (readerPool)
+				readerPool.Enqueue(reader);
 		}
 
 		public long ReadPosition

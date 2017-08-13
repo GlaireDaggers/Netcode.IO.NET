@@ -6,6 +6,8 @@ using System.Threading;
 using NetcodeIO.NET;
 using NetcodeIO.NET.Utils.IO;
 
+using NetcodeIO.NET.Tests;
+
 namespace Test
 {
 	class Program
@@ -22,8 +24,15 @@ namespace Test
 
 		static void Main(string[] args)
 		{
-			startClient();
+			//startClient();
 			//startServer();
+
+			Tests.TestClientServerMultipleClients();
+			Console.ReadLine();
+		}
+
+		private static void runTest()
+		{
 		}
 
 		private static void startClient()
@@ -64,6 +73,7 @@ namespace Test
 			TokenFactory factory = new TokenFactory(0x1122334455667788L, _privateKey);
 			byte[] connectToken = factory.GenerateConnectToken(new IPEndPoint[] { new IPEndPoint(IPAddress.Parse("127.0.0.1"), 40000) },
 				30,
+				5,
 				1UL,
 				1UL,
 				new byte[256]);

@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Nito.AsyncEx.UnitTests.MSTest</name>
+    </assembly>
+    <members>
+        <member name="T:WpfContext">
+            <summary>
+            Async methods can run in a myriad of contexts - some have a "thread affinity"
+            such that continuations are posted back in a way that ensures that they always
+            execute on the originating thread.
+            
+            WPF is one of such contexts.
+            </summary>
+        </member>
+        <member name="M:WpfContext.Run(System.Action)">
+            <summary>
+            Runs the action inside a message loop and continues pumping messages
+            as long as any asynchronous operations have been registered
+            </summary>
+        </member>
+        <member name="M:WpfContext.AsyncVoidSyncContext.#ctor(System.Threading.SynchronizationContext,System.Windows.Threading.DispatcherFrame)">
+            <summary>Constructor for creating a new AsyncVoidSyncContext. Creates a new shared operation counter.</summary>
+        </member>
+        <member name="T:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker">
+            <summary>
+            Invokes a test method within a particular asynchronous context.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker.context">
+            <summary>
+            The test method context, including the actual test method to run.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker.executer">
+            <summary>
+            The asynchronous context chosen to execute the test method. This context will wait until all asynchronous operations have completed, and will propogate asynchronous exceptions.
+            </summary>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker.GetAsyncContext(Nito.AsyncEx.UnitTests.AsyncContext,Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodInvokerContext)">
+            <summary>
+            Determine the asynchronous context to use.
+            </summary>
+            <param name="testClassAttributeAsyncContext">The AsyncContext passed to [AsyncTestClass], or 0 if no AsyncContext was passed.</param>
+            <param name="invokerContext">The test method context, including the actual test method to run.</param>
+            <returns>The chosen asynchronous context.</returns>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker.#ctor(Nito.AsyncEx.UnitTests.AsyncContext,Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodInvokerContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker"/> class.
+            </summary>
+            <param name="testClassAttributeAsyncContext">The AsyncContext passed to [AsyncTestClass], or 0 if no AsyncContext was passed.</param>
+            <param name="context">The test method context, including the actual test method to run.</param>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncTestMethodInvoker.Invoke(System.Object[])">
+            <summary>
+            Invokes the test method within the chosen asynchronous context.
+            </summary>
+        </member>
+        <member name="T:Nito.AsyncEx.UnitTests.AsyncTaskExtensionExecution">
+            <summary>
+            A test type extension point that takes the AsyncContext passed to [AsyncTestClass] and passes it on to AsyncTestMethodInvoker.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncTaskExtensionExecution.testClassAttributeAsyncContext">
+            <summary>
+            The AsyncContext passed to [AsyncTestClass], or 0 if no AsyncContext was passed.
+            </summary>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncTaskExtensionExecution.#ctor(Nito.AsyncEx.UnitTests.AsyncContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Nito.AsyncEx.UnitTests.AsyncTaskExtensionExecution"/> class.
+            </summary>
+            <param name="testClassAttributeAsyncContext">The AsyncContext passed to [AsyncTestClass], or 0 if no AsyncContext was passed.</param>
+        </member>
+        <member name="T:Nito.AsyncEx.UnitTests.AsyncContext">
+            <summary>
+            Specifies the context in which to run the test method.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncContext.General">
+            <summary>
+            A framework-independent general thread-affine asynchronous context. This is the default, and should be used whenever possible.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncContext.WindowsForms">
+            <summary>
+            A Windows Forms framework, for testing asynchronous components that depend on Control.Invoke/BeginInvoke or an actual message loop.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncContext.WindowsPresentationFoundation">
+            <summary>
+            A WPF framework, for testing asynchronous components that depend on Dispatcher or an actual message loop.
+            </summary>
+        </member>
+        <member name="F:Nito.AsyncEx.UnitTests.AsyncContext.None">
+            <summary>
+            No asynchronous context; the test method is invoked synchronously (same as MSTest default behavior). This context may cause asynchronous tests to pass when they should fail. This context should only be used for test methods that depend on a thread-pool context.
+            </summary>
+        </member>
+        <member name="T:Nito.AsyncEx.UnitTests.AsyncContextAttribute">
+            <summary>
+            Specifies the context in which to run the test method. If this attribute is applied to the assembly, then this specifies the default context in which to run all test methods in that assembly.
+            </summary>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncContextAttribute.#ctor(Nito.AsyncEx.UnitTests.AsyncContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Nito.AsyncEx.UnitTests.AsyncContextAttribute"/> class.
+            </summary>
+            <param name="asyncContext">Specifies the context in which to run the test method. If this attribute is applied to the assembly, then this specifies the default context in which to run all test methods in that assembly.</param>
+        </member>
+        <member name="P:Nito.AsyncEx.UnitTests.AsyncContextAttribute.AsyncContext">
+            <summary>
+            Specifies the context in which to run the test method. If this attribute is applied to the assembly, then this specifies the default context in which to run all test methods in that assembly.
+            </summary>
+        </member>
+        <member name="M:GeneralThreadAffineContext.Run(System.Action)">
+            <summary>
+            Runs the action inside a message loop and continues looping work items
+            as long as any asynchronous operations have been registered
+            </summary>
+        </member>
+        <member name="M:GeneralThreadAffineContext.VoidContext.#ctor">
+            <summary>Constructor for creating a new AsyncVoidSyncContext. Creates a new shared operation counter.</summary>
+        </member>
+        <member name="T:WindowsFormsContext">
+            <summary>
+            Async methods can run in a myriad of contexts - some have a "thread affinity"
+            such that continuations are posted back in a way that ensures that they always
+            execute on the originating thread.
+            
+            Windows Forms is one of such contexts.
+            </summary>
+        </member>
+        <member name="M:WindowsFormsContext.Run(System.Action)">
+            <summary>
+            Runs the action inside a message loop and continues pumping messages
+            as long as any asynchronous operations have been registered
+            </summary>
+        </member>
+        <member name="M:WindowsFormsContext.AsyncVoidSyncContext.#ctor(System.Threading.SynchronizationContext)">
+            <summary>Constructor for creating a new AsyncVoidSyncContext. Creates a new shared operation counter.</summary>
+        </member>
+        <member name="T:Nito.AsyncEx.UnitTests.AsyncTestClassAttribute">
+            <summary>
+            An async-compatible replacement for Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.
+            </summary>
+        </member>
+        <member name="M:Nito.AsyncEx.UnitTests.AsyncTestClassAttribute.GetExecution">
+            <summary>
+            Retrieves the test execution extension that uses an async context.
+            </summary>
+        </member>
+        <member name="P:Nito.AsyncEx.UnitTests.AsyncTestClassAttribute.ExtensionId">
+            <summary>
+            Gets the extension id.
+            </summary>
+        </member>
+        <member name="P:Nito.AsyncEx.UnitTests.AsyncTestClassAttribute.AsyncContext">
+            <summary>
+            Specifies the context in which to run the test methods in this class.
+            </summary>
+        </member>
+    </members>
+</doc>

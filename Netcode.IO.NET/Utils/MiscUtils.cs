@@ -36,6 +36,22 @@ namespace NetcodeIO.NET.Utils
 			return true;
 		}
 
+		public static int SequenceBytesRequired(ulong sequence)
+		{
+			int sequenceBytes = 0;
+			
+			while (sequence > 0)
+			{
+				sequenceBytes++;
+				sequence >>= 8;
+			}
+
+			if (sequenceBytes == 0)
+				sequenceBytes = 1;
+
+			return sequenceBytes;
+		}
+
 		public static bool CompareByteArraysConstantTime(byte[] lhs, byte[] rhs)
 		{
 			int min = Math.Min(lhs.Length, rhs.Length);
