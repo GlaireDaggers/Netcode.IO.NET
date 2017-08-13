@@ -105,6 +105,7 @@ To generate a new 2048-byte public connect token:
 tokenFactory.GenerateConnectToken(
 	addressList,		// IPEndPoint[] list of addresses the client can connect to. Must have at least one and no more than 32.
 	expirySeconds,		// in how many seconds will the token expire
+	serverTimeout,		// how long it takes until a connection attempt times out and the client tries the next server.
 	sequenceNumber,		// ulong token sequence number used to uniquely identify a connect token.
 	clientID,		// ulong ID used to uniquely identify this client
 	userData		// byte[], up to 256 bytes of arbitrary user data (available to the server as RemoteClient.UserData)
