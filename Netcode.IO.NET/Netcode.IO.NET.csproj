@@ -64,7 +64,7 @@
     <Compile Include="Utils\MiscUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="BCCrypto\BCCrypto.csproj">
+    <ProjectReference Include="..\BCCrypto\BCCrypto.csproj">
       <Project>{d7022bc7-e21d-4a79-bde7-30f01ed961df}</Project>
       <Name>BCCrypto</Name>
     </ProjectReference>

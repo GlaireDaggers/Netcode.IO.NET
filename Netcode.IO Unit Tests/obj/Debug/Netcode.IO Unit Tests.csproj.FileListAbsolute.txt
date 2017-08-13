@@ -9,5 +9,3 @@ D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Debug\Netcode.IO Unit Tests.cspr
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Debug\Netcode.IO Unit Tests.dll
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Debug\Netcode.IO Unit Tests.pdb
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Debug\Netcode.IO Unit Tests.dll.config
-D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Debug\Nito.AsyncEx.UnitTests.MSTest.dll
-D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Debug\Nito.AsyncEx.UnitTests.MSTest.xml

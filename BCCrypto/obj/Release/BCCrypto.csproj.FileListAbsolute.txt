@@ -1,0 +1,4 @@
+D:\Git\Netcode.IO.NET\Netcode.IO.NET\BCCrypto\bin\Release\BCCrypto.dll
+D:\Git\Netcode.IO.NET\Netcode.IO.NET\BCCrypto\bin\Release\BCCrypto.pdb
+D:\Git\Netcode.IO.NET\Netcode.IO.NET\BCCrypto\obj\Release\BCCrypto.dll
+D:\Git\Netcode.IO.NET\Netcode.IO.NET\BCCrypto\obj\Release\BCCrypto.pdb

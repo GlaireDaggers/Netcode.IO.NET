@@ -8,7 +8,6 @@ using NetcodeIO.NET;
 
 using System.Diagnostics;
 
-using Nito.AsyncEx.UnitTests;
 using NetcodeIO.NET.Tests;
 
 namespace Netcode_IO_Unit_Tests
