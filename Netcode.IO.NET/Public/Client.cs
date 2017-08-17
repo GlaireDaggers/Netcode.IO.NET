@@ -189,7 +189,7 @@ namespace NetcodeIO.NET
 			{
 				var socket = new UDPSocketContext(endpoint.AddressFamily);
 				var socketEndpoint = new IPEndPoint(endpoint.AddressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any, 0);
-				socket.Bind(endpoint);
+				socket.Bind(socketEndpoint);
 
 				return socket;
 			};
