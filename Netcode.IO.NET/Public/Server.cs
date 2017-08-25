@@ -567,6 +567,8 @@ namespace NetcodeIO.NET
 		// process an incoming connection response packet
 		private void processConnectionResponse(ByteArrayReaderWriter reader, NetcodePacketHeader header, int size, EndPoint sender)
 		{
+			log("Got connection response", NetcodeLogLevel.Debug);
+
 			// encryption mapping was not registered, so don't bother
 			int cryptIdx = encryptionManager.FindEncryptionMapping(sender, time);
 			if (cryptIdx == -1)
@@ -642,6 +644,8 @@ namespace NetcodeIO.NET
 		// process an incoming connection request packet
 		private void processConnectionRequest(ByteArrayReaderWriter reader, int size, EndPoint sender)
 		{
+			log("Got connection request", NetcodeLogLevel.Debug);
+
 			var connectionRequestPacket = new NetcodeConnectionRequestPacket();
 			if (!connectionRequestPacket.Read(reader, size - (int)reader.ReadPosition, protocolID))
 			{
@@ -825,6 +829,8 @@ namespace NetcodeIO.NET
 		// sends a connection challenge packet to the endpoint
 		private void sendConnectionChallenge(NetcodePrivateConnectToken connectToken, EndPoint endpoint)
 		{
+			log("Sending connection challenge", NetcodeLogLevel.Debug);
+
 			var challengeToken = new NetcodeChallengeToken();
 			challengeToken.ClientID = connectToken.ClientID;
 			challengeToken.UserData = connectToken.UserData;

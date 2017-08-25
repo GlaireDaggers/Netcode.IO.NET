@@ -30,7 +30,10 @@ namespace NetcodeIO.NET.Utils
 
 		public int Count
 		{
-			get { return datagramQueue.Count; }
+			get
+			{
+				return datagramQueue.Count;
+			}
 		}
 
 		public void Clear()
@@ -42,13 +45,14 @@ namespace NetcodeIO.NET.Utils
 		public void ReadFrom( Socket socket )
 		{
 			EndPoint sender;
-			if (endpointPool.Count > 0)
+
+			lock (endpoint_mutex)
 			{
-				lock (endpoint_mutex)
+				if (endpointPool.Count > 0)
 					sender = endpointPool.Dequeue();
+				else
+					sender = new IPEndPoint(IPAddress.Any, 0);
 			}
-			else
-				sender = new IPEndPoint(IPAddress.Any, 0);
 
 			byte[] receiveBuffer = BufferPool.GetBuffer(2048);
 			int recv = socket.ReceiveFrom(receiveBuffer, ref sender);

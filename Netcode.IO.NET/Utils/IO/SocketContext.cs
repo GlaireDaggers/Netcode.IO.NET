@@ -84,8 +84,13 @@ namespace NetcodeIO.NET.Utils.IO
 				{
 					datagramQueue.ReadFrom(internalSocket);
 				}
-				catch
+				catch(Exception e)
 				{
+					if (e is SocketException)
+					{
+						var socketException = e as SocketException;
+						if (socketException.SocketErrorCode == SocketError.ConnectionReset) continue;
+					}
 					return;
 				}
 			}

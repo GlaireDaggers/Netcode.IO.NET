@@ -25,9 +25,9 @@ namespace Test
 		static void Main(string[] args)
 		{
 			//startClient();
-			//startServer();
+			startServer();
 
-			Tests.TestClientServerMultipleClients();
+			//Tests.TestClientServerMultipleClients();
 			Console.ReadLine();
 		}
 
