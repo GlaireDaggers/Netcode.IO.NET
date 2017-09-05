@@ -11,6 +11,7 @@ namespace NetcodeIO.NET.Utils.IO
 {
 	internal interface ISocketContext : IDisposable
 	{
+		int BoundPort { get; }
 		void Close();
 		void Bind(EndPoint endpoint);
 		void SendTo(byte[] data, EndPoint remoteEP);
@@ -21,6 +22,14 @@ namespace NetcodeIO.NET.Utils.IO
 
 	internal class UDPSocketContext : ISocketContext
 	{
+		public int BoundPort
+		{
+			get
+			{
+				return ((IPEndPoint)internalSocket.LocalEndPoint).Port;
+			}
+		}
+
 		private Socket internalSocket;
 		private Thread socketThread;
 
@@ -157,6 +166,11 @@ namespace NetcodeIO.NET.Utils.IO
 
 	internal class NetworkSimulatorSocketContext : ISocketContext
 	{
+		public int BoundPort
+		{
+			get { return 0; }
+		}
+
 		private struct simulatedPacket
 		{
 			public double receiveTime;

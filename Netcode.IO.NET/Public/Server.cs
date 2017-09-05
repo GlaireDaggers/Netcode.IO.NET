@@ -122,6 +122,20 @@ namespace NetcodeIO.NET
 		public NetcodeLogLevel LogLevel = NetcodeLogLevel.Error;
 
 		/// <summary>
+		/// Gets the port this server is listening on (or -1 if not listening)
+		/// </summary>
+		public int Port
+		{
+			get
+			{
+				if (listenSocket == null)
+					return -1;
+
+				return listenSocket.BoundPort;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the internal tickrate of the server in ticks per second. Value must be between 1 and 1000.
 		/// </summary>
 		public int Tickrate

@@ -133,6 +133,20 @@ namespace NetcodeIO.NET
 		}
 
 		/// <summary>
+		/// Gets the port the client socket is bound to, or -1 if not bound
+		/// </summary>
+		public int Port
+		{
+			get
+			{
+				if (socket == null)
+					return -1;
+
+				return socket.BoundPort;
+			}
+		}
+
+		/// <summary>
 		/// Event triggered when client state changes
 		/// </summary>
 		public event ClientStateChangedHandler OnStateChanged;
