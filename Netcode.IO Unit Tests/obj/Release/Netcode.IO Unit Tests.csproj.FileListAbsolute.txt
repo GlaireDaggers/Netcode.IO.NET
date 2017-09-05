@@ -9,5 +9,3 @@ D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Release\Netcode.IO Unit Tests.cs
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Release\Netcode.IO Unit Tests.dll
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\obj\Release\Netcode.IO Unit Tests.pdb
 D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Release\Netcode.IO Unit Tests.dll.config
-D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Release\Nito.AsyncEx.UnitTests.MSTest.dll
-D:\Git\Netcode.IO.NET\Netcode.IO Unit Tests\bin\Release\Nito.AsyncEx.UnitTests.MSTest.xml

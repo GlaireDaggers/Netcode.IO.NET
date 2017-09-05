@@ -37,6 +37,8 @@ namespace NetcodeIO.NET.Tests
 			public EndPoint address;
 			public byte[] SendKey;
 			public byte[] ReceiveKey;
+			public int TimeoutSeconds;
+			public uint ClientID;
 		}
 
 		public static void TestSequence()
@@ -144,6 +146,8 @@ namespace NetcodeIO.NET.Tests
 					address = new IPEndPoint(IPAddress.Parse("0:0:0:0:0:0:0:1"), 20000 + i),
 					SendKey = new byte[32],
 					ReceiveKey = new byte[32],
+					TimeoutSeconds = 10 + i,
+					ClientID = (uint)i
 				};
 
 				KeyUtils.GenerateKey(encryptionMapping[i].SendKey);
@@ -158,9 +162,15 @@ namespace NetcodeIO.NET.Tests
 				assert(encryptionManager.GetSendKey(encryptionIndex) == null, "Encryption manager returned invalid key");
 				assert(encryptionManager.GetReceiveKey(encryptionIndex) == null, "Encryption manager returned invalid key");
 
-				assert(encryptionManager.AddEncryptionMapping(encryptionMapping[i].address, encryptionMapping[i].SendKey, encryptionMapping[i].ReceiveKey, time, -1.0), "Encryption manager failed to add mapping");
+				assert(encryptionManager.AddEncryptionMapping(encryptionMapping[i].address, encryptionMapping[i].SendKey, encryptionMapping[i].ReceiveKey, time, -1.0, encryptionMapping[i].TimeoutSeconds, encryptionMapping[i].ClientID), "Encryption manager failed to add mapping");
 
 				encryptionIndex = encryptionManager.FindEncryptionMapping(encryptionMapping[i].address, time);
+
+				int timeoutSeconds = encryptionManager.GetTimeoutSeconds(encryptionIndex);
+				uint clientID = encryptionManager.GetClientID(encryptionIndex);
+
+				assert(timeoutSeconds == encryptionMapping[i].TimeoutSeconds, "Encryption manager returned invalid timeout seconds");
+				assert(clientID == encryptionMapping[i].ClientID, "Encryption manager returned invalid client ID");
 
 				byte[] sendKey = encryptionManager.GetSendKey(encryptionIndex);
 				byte[] receiveKey = encryptionManager.GetReceiveKey(encryptionIndex);
@@ -205,13 +215,37 @@ namespace NetcodeIO.NET.Tests
 			}
 
 			// add the encryption mappings back in
-			assert(encryptionManager.AddEncryptionMapping(encryptionMapping[0].address, encryptionMapping[0].SendKey, encryptionMapping[0].ReceiveKey, time, -1.0), "Encryption manager failed to add mapping");
-			assert(encryptionManager.AddEncryptionMapping(encryptionMapping[encryptionMapping.Length - 1].address, encryptionMapping[encryptionMapping.Length - 1].SendKey, encryptionMapping[encryptionMapping.Length - 1].ReceiveKey, time, -1.0), "Encryption manager failed to add mapping");
+			assert(
+				encryptionManager.AddEncryptionMapping(
+					encryptionMapping[0].address,
+					encryptionMapping[0].SendKey,
+					encryptionMapping[0].ReceiveKey,
+					time, -1.0,
+					encryptionMapping[0].TimeoutSeconds,
+					encryptionMapping[0].ClientID),
+				"Encryption manager failed to add mapping");
+
+			assert(
+				encryptionManager.AddEncryptionMapping(
+					encryptionMapping[encryptionMapping.Length - 1].address,
+					encryptionMapping[encryptionMapping.Length - 1].SendKey,
+					encryptionMapping[encryptionMapping.Length - 1].ReceiveKey,
+					time, -1.0,
+					encryptionMapping[encryptionMapping.Length - 1].TimeoutSeconds,
+					encryptionMapping[encryptionMapping.Length - 1].ClientID),
+				"Encryption manager failed to add mapping");
 
 			// ensure all encryption mappings can be looked up
 			for (int i = 0; i < encryptionMapping.Length; i++)
 			{
 				int encryptionIndex = encryptionManager.FindEncryptionMapping(encryptionMapping[i].address, time);
+
+				int timeoutSeconds = encryptionManager.GetTimeoutSeconds(encryptionIndex);
+				uint clientID = encryptionManager.GetClientID(encryptionIndex);
+
+				assert(timeoutSeconds == encryptionMapping[i].TimeoutSeconds, "Encryption manager returned invalid timeout seconds");
+				assert(clientID == encryptionMapping[i].ClientID, "Encryption manager returned invalid client ID");
+
 				byte[] sendKey = encryptionManager.GetSendKey(encryptionIndex);
 				byte[] receiveKey = encryptionManager.GetReceiveKey(encryptionIndex);
 
@@ -243,9 +277,15 @@ namespace NetcodeIO.NET.Tests
 				assert(encryptionManager.GetSendKey(encryptionIndex) == null, "Encryption manager returned invalid key");
 				assert(encryptionManager.GetReceiveKey(encryptionIndex) == null, "Encryption manager returned invalid key");
 
-				assert(encryptionManager.AddEncryptionMapping(encryptionMapping[i].address, encryptionMapping[i].SendKey, encryptionMapping[i].ReceiveKey, time, -1.0), "Encryption manager failed to add mapping");
+				assert(encryptionManager.AddEncryptionMapping(encryptionMapping[i].address, encryptionMapping[i].SendKey, encryptionMapping[i].ReceiveKey, time, -1.0, encryptionMapping[i].TimeoutSeconds, encryptionMapping[i].ClientID), "Encryption manager failed to add mapping");
 
 				encryptionIndex = encryptionManager.FindEncryptionMapping(encryptionMapping[i].address, time);
+
+				int timeoutSeconds = encryptionManager.GetTimeoutSeconds(encryptionIndex);
+				uint clientID = encryptionManager.GetClientID(encryptionIndex);
+
+				assert(timeoutSeconds == encryptionMapping[i].TimeoutSeconds, "Encryption manager returned invalid timeout seconds");
+				assert(clientID == encryptionMapping[i].ClientID, "Encryption manager returned invalid client ID");
 
 				byte[] sendKey = encryptionManager.GetSendKey(encryptionIndex);
 				byte[] receiveKey = encryptionManager.GetReceiveKey(encryptionIndex);
@@ -270,8 +310,7 @@ namespace NetcodeIO.NET.Tests
 			}
 
 			// test the expire time works as expected
-			assert(encryptionManager.AddEncryptionMapping(encryptionMapping[0].address, encryptionMapping[0].SendKey, encryptionMapping[0].ReceiveKey, time, time + 1.0), "Encryption manager failed to add mapping");
-
+			assert(encryptionManager.AddEncryptionMapping(encryptionMapping[0].address, encryptionMapping[0].SendKey, encryptionMapping[0].ReceiveKey, time, time + 1.0, encryptionMapping[0].TimeoutSeconds, encryptionMapping[0].ClientID), "Encryption manager failed to add mapping");
 			{
 				int encryptionIndex = encryptionManager.FindEncryptionMapping(encryptionMapping[0].address, time);
 				assert(encryptionIndex != -1, "Encryption manager failed to find entry");

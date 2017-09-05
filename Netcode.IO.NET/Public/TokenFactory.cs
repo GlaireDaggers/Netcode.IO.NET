@@ -58,6 +58,7 @@ namespace NetcodeIO.NET
 
 			NetcodePrivateConnectToken privateConnectToken = new NetcodePrivateConnectToken();
 			privateConnectToken.ClientID = clientID;
+			privateConnectToken.TimeoutSeconds = serverTimeout;
 
 			// generate random crypto keys
 			byte[] clientToServerKey = new byte[32];
@@ -88,7 +89,7 @@ namespace NetcodeIO.NET
 			}
 
 			ulong createTimestamp = (ulong)Math.Truncate(time);
-			ulong expireTimestamp = createTimestamp + (ulong)expirySeconds;
+			ulong expireTimestamp = expirySeconds >= 0 ? ( createTimestamp + (ulong)expirySeconds ) : 0xFFFFFFFFFFFFFFFFUL;
 
 			byte[] encryptedPrivateToken = new byte[1024];
 			PacketIO.EncryptPrivateConnectToken(privateConnectTokenBytes, protocolID, expireTimestamp, sequence, privateKey, encryptedPrivateToken);
@@ -102,7 +103,7 @@ namespace NetcodeIO.NET
 			publicToken.ConnectServers = privateConnectToken.ConnectServers;
 			publicToken.ClientToServerKey = clientToServerKey;
 			publicToken.ServerToClientKey = serverToClientKey;
-			publicToken.TimeoutSeconds = (uint)serverTimeout;
+			publicToken.TimeoutSeconds = serverTimeout;
 
 			byte[] publicTokenBytes = new byte[2048];
 			using (var writer = ByteArrayReaderWriter.Get(publicTokenBytes))

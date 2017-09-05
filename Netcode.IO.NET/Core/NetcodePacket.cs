@@ -212,7 +212,7 @@ namespace NetcodeIO.NET
 		public ConnectTokenServerEntry[] ConnectServers;
 		public byte[] ClientToServerKey;
 		public byte[] ServerToClientKey;
-		public uint TimeoutSeconds;
+		public int TimeoutSeconds;
 
 		public bool Read(ByteArrayReaderWriter reader)
 		{
@@ -227,6 +227,7 @@ namespace NetcodeIO.NET
 			ExpireTimestamp = reader.ReadUInt64();
 			ConnectTokenSequence = reader.ReadUInt64();
 			PrivateConnectTokenBytes = reader.ReadBytes(Defines.NETCODE_CONNECT_TOKEN_PRIVATE_BYTES);
+			TimeoutSeconds = (int)reader.ReadUInt32();
 
 			int numServers = (int)reader.ReadUInt32();
 			if (numServers < 1 || numServers > Defines.MAX_SERVER_ADDRESSES)
@@ -241,7 +242,6 @@ namespace NetcodeIO.NET
 
 			ClientToServerKey = reader.ReadBytes(32);
 			ServerToClientKey = reader.ReadBytes(32);
-			TimeoutSeconds = reader.ReadUInt32();
 
 			return true;
 		}
@@ -255,6 +255,7 @@ namespace NetcodeIO.NET
 			writer.Write(ExpireTimestamp);
 			writer.Write(ConnectTokenSequence);
 			writer.Write(PrivateConnectTokenBytes);
+			writer.Write((uint)TimeoutSeconds);
 
 			writer.Write((uint)ConnectServers.Length);
 			for (int i = 0; i < ConnectServers.Length; i++)
@@ -262,13 +263,13 @@ namespace NetcodeIO.NET
 
 			writer.Write(ClientToServerKey);
 			writer.Write(ServerToClientKey);
-			writer.Write(TimeoutSeconds);
 		}
 	}
 
 	internal struct NetcodePrivateConnectToken
 	{
 		public ulong ClientID;
+		public int TimeoutSeconds;
 		public ConnectTokenServerEntry[] ConnectServers;
 		public byte[] ClientToServerKey;
 		public byte[] ServerToClientKey;
@@ -293,6 +294,7 @@ namespace NetcodeIO.NET
 				using (var reader = ByteArrayReaderWriter.Get(tokenBuffer))
 				{
 					this.ClientID = reader.ReadUInt64();
+					this.TimeoutSeconds = (int)reader.ReadUInt32();
 					uint numServerAddresses = reader.ReadUInt32();
 
 					if (numServerAddresses == 0 || numServerAddresses > Defines.MAX_SERVER_ADDRESSES)
@@ -329,6 +331,7 @@ namespace NetcodeIO.NET
 		public void Write(ByteArrayReaderWriter stream)
 		{
 			stream.Write(ClientID);
+			stream.Write((uint)TimeoutSeconds);
 			stream.Write((uint)ConnectServers.Length);
 			foreach (var server in ConnectServers)
 				server.WriteData(stream);

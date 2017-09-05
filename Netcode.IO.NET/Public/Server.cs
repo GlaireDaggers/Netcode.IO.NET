@@ -47,6 +47,7 @@ namespace NetcodeIO.NET
 		internal Server server;
 
 		internal double lastResponseTime;
+		internal int timeoutSeconds;
 
 		public RemoteClient(Server server)
 		{
@@ -163,7 +164,6 @@ namespace NetcodeIO.NET
 		private ulong protocolID;
 
 		private RemoteClient[] clientSlots;
-		private Dictionary<EndPoint, uint> endpointClientIDMap = new Dictionary<EndPoint, uint>();
 		private int maxSlots;
 
 		private usedConnectToken[] connectTokenHistory;
@@ -335,13 +335,16 @@ namespace NetcodeIO.NET
 				}
 			}
 
-			// disconnect any clients which have not responded for 10 seconds
+			// disconnect any clients which have not responded for timeout seconds
 			for (int i = 0; i < clientSlots.Length; i++)
 			{
 				if (clientSlots[i] == null) continue;
 
 				double timeRemaining = time - clientSlots[i].lastResponseTime;
-				if ((time - clientSlots[i].lastResponseTime) >= Defines.NETCODE_TIMEOUT_SECONDS)
+
+				// timeout < 0 disables timeouts
+				if (clientSlots[i].timeoutSeconds >= 0 &&
+					(time - clientSlots[i].lastResponseTime) >= clientSlots[i].timeoutSeconds)
 				{
 					if (OnClientDisconnected != null)
 						OnClientDisconnected(clientSlots[i]);
@@ -414,11 +417,15 @@ namespace NetcodeIO.NET
 		// check the packet against the client's replay protection, returning true if packet was replayed, false otherwise
 		private bool checkReplay(NetcodePacketHeader header, EndPoint sender)
 		{
-			if (!endpointClientIDMap.ContainsKey(sender))
+			var cryptIdx = encryptionManager.FindEncryptionMapping(sender, time);
+			if (cryptIdx == -1)
 				return true;
 
-			var clientIndex = endpointClientIDMap[sender];
+			var clientIndex = encryptionManager.GetClientID(cryptIdx);
 			var client = clientSlots[clientIndex];
+
+			if (client == null)
+				return true;
 
 			return client.replayProtection.AlreadyReceived(header.SequenceNumber);
 		}
@@ -446,18 +453,11 @@ namespace NetcodeIO.NET
 				return;
 
 			// locate the client by endpoint and free their slot
-			if (!endpointClientIDMap.ContainsKey(sender))
-			{
-				log("No client found for sender endpoint", NetcodeLogLevel.Debug);
-				return;
-			}
-			var clientIndex = endpointClientIDMap[sender];
+			var clientIndex = encryptionManager.GetClientID( cryptIdx );
 
 			var client = clientSlots[clientIndex];
 			clientSlots[clientIndex] = null;
-
-			endpointClientIDMap.Remove(sender);
-
+			
 			// remove encryption mapping
 			encryptionManager.RemoveEncryptionMapping(sender, time);
 
@@ -491,14 +491,7 @@ namespace NetcodeIO.NET
 			if (!payloadPacket.Read(reader, size - (int)reader.ReadPosition, decryptKey, protocolID))
 				return;
 
-			// locate the client by endpoint
-			if (!endpointClientIDMap.ContainsKey(sender))
-			{
-				payloadPacket.Release();
-				return;
-			}
-
-			var clientIndex = endpointClientIDMap[sender];
+			var clientIndex = encryptionManager.GetClientID( cryptIdx );
 			var client = clientSlots[clientIndex];
 
 			// trigger callback
@@ -625,11 +618,14 @@ namespace NetcodeIO.NET
 			client.Connected = true;
 			client.replayProtection = new NetcodeReplayProtection();
 
+			// assign timeout to client
+			client.timeoutSeconds = encryptionManager.GetTimeoutSeconds(cryptIdx);
+
 			// assign client to a free slot
 			client.ClientIndex = (uint)nextSlot;
 			this.clientSlots[nextSlot] = client;
 
-			this.endpointClientIDMap.Add(sender, client.ClientIndex);
+			encryptionManager.SetClientID(cryptIdx, client.ClientIndex);
 
 			// copy user data so application can make use of it, and set confirmed to false
 			client.UserData = challengeToken.UserData;
@@ -714,14 +710,17 @@ namespace NetcodeIO.NET
 				return;
 			}
 
-			// add encryption mapping for this endpoint
+			// add encryption mapping for this endpoint as well as timeout
 			// packets received from this endpoint are to be decrypted with the client-to-server key
 			// packets sent to this endpoint are to be encrypted with the server-to-client key
+			// if no messages are received within timeout from this endpoint, it is disconnected (unless timeout is negative)
 			if (!encryptionManager.AddEncryptionMapping(sender,
 				privateConnectToken.ServerToClientKey,
 				privateConnectToken.ClientToServerKey,
 				time,
-				time + 30))
+				time + 30,
+				privateConnectToken.TimeoutSeconds,
+				0))
 			{
 				log("Failed to add encryption mapping", NetcodeLogLevel.Error);
 				return;
@@ -748,9 +747,6 @@ namespace NetcodeIO.NET
 		// sends a disconnect packet to the client
 		private void disconnectClient(RemoteClient client)
 		{
-			if (endpointClientIDMap.ContainsKey(client.RemoteEndpoint))
-				endpointClientIDMap.Remove(client.RemoteEndpoint);
-
 			for (int i = 0; i < clientSlots.Length; i++)
 			{
 				if (clientSlots[i] == client)

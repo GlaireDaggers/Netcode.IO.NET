@@ -11,6 +11,8 @@ namespace NetcodeIO.NET
 		{
 			public double ExpireTime;
 			public double LastAccessTime;
+			public int TimeoutSeconds;
+			public uint ClientID;
 			public EndPoint Address;
 			public byte[] SendKey;
 			public byte[] ReceiveKey;
@@ -20,6 +22,8 @@ namespace NetcodeIO.NET
 				ExpireTime = -1.0;
 				LastAccessTime = -1000.0;
 				Address = null;
+				TimeoutSeconds = 0;
+				ClientID = 0;
 
 				Array.Clear(SendKey, 0, SendKey.Length);
 				Array.Clear(ReceiveKey, 0, ReceiveKey.Length);
@@ -29,7 +33,7 @@ namespace NetcodeIO.NET
 		internal int numEncryptionMappings;
 		internal encryptionMapEntry[] encryptionMappings;
 
-		public EncryptionManager( int maxClients )
+		public EncryptionManager(int maxClients)
 		{
 			encryptionMappings = new encryptionMapEntry[maxClients * 4];
 			for (int i = 0; i < encryptionMappings.Length; i++)
@@ -50,15 +54,17 @@ namespace NetcodeIO.NET
 			}
 		}
 
-		public bool AddEncryptionMapping(EndPoint address, byte[] sendKey, byte[] receiveKey, double time, double expireTime)
+		public bool AddEncryptionMapping(EndPoint address, byte[] sendKey, byte[] receiveKey, double time, double expireTime, int timeoutSeconds, uint clientID)
 		{
 			for (int i = 0; i < numEncryptionMappings; i++)
 			{
-				if ( MiscUtils.AddressEqual( encryptionMappings[i].Address, address )
-					&& encryptionMappings[i].LastAccessTime + Defines.NETCODE_TIMEOUT_SECONDS >= time)
+				if (MiscUtils.AddressEqual(encryptionMappings[i].Address, address)
+					&& ( timeoutSeconds >= 0 && encryptionMappings[i].LastAccessTime + timeoutSeconds >= time ))
 				{
 					encryptionMappings[i].ExpireTime = expireTime;
 					encryptionMappings[i].LastAccessTime = time;
+					encryptionMappings[i].TimeoutSeconds = timeoutSeconds;
+					encryptionMappings[i].ClientID = clientID;
 
 					Buffer.BlockCopy(sendKey, 0, encryptionMappings[i].SendKey, 0, 32);
 					Buffer.BlockCopy(receiveKey, 0, encryptionMappings[i].ReceiveKey, 0, 32);
@@ -68,12 +74,14 @@ namespace NetcodeIO.NET
 
 			for (int i = 0; i < encryptionMappings.Length; i++)
 			{
-				if (encryptionMappings[i].LastAccessTime + Defines.NETCODE_TIMEOUT_SECONDS < time ||
+				if ((timeoutSeconds >= 0 && encryptionMappings[i].LastAccessTime + timeoutSeconds < time) ||
 					(encryptionMappings[i].ExpireTime >= 0.0 && encryptionMappings[i].ExpireTime < time))
 				{
 					encryptionMappings[i].Address = address;
 					encryptionMappings[i].ExpireTime = expireTime;
 					encryptionMappings[i].LastAccessTime = time;
+					encryptionMappings[i].TimeoutSeconds = timeoutSeconds;
+					encryptionMappings[i].ClientID = clientID;
 
 					Buffer.BlockCopy(sendKey, 0, encryptionMappings[i].SendKey, 0, 32);
 					Buffer.BlockCopy(receiveKey, 0, encryptionMappings[i].ReceiveKey, 0, 32);
@@ -101,7 +109,7 @@ namespace NetcodeIO.NET
 						int index = i - 1;
 						while (index >= 0)
 						{
-							if (encryptionMappings[index].LastAccessTime + Defines.NETCODE_TIMEOUT_SECONDS >= time &&
+							if ((encryptionMappings[i].TimeoutSeconds < 0 || encryptionMappings[index].LastAccessTime + encryptionMappings[i].TimeoutSeconds >= time ) &&
 								(encryptionMappings[index].ExpireTime < 0 || encryptionMappings[index].ExpireTime > time))
 								break;
 							index--;
@@ -126,6 +134,26 @@ namespace NetcodeIO.NET
 		{
 			if (idx == -1 || idx >= encryptionMappings.Length) return null;
 			return encryptionMappings[idx].ReceiveKey;
+		}
+
+		public int GetTimeoutSeconds(int idx)
+		{
+			if (idx == -1 || idx >= encryptionMappings.Length) return -1;
+			return encryptionMappings[idx].TimeoutSeconds;
+		}
+
+		public uint GetClientID(int idx)
+		{
+			if (idx == -1 || idx >= encryptionMappings.Length) return 0;
+			return encryptionMappings[idx].ClientID;
+		}
+
+		public void SetClientID(int idx, uint clientID)
+		{
+			if (idx < 0 || idx >= numEncryptionMappings)
+				throw new IndexOutOfRangeException();
+
+			encryptionMappings[idx].ClientID = clientID;
 		}
 
 		public bool Touch(int index, EndPoint address, double time)
@@ -154,7 +182,7 @@ namespace NetcodeIO.NET
 			for (int i = 0; i < numEncryptionMappings; i++)
 			{
 				if (MiscUtils.AddressEqual(encryptionMappings[i].Address, address) &&
-					encryptionMappings[i].LastAccessTime + Defines.NETCODE_TIMEOUT_SECONDS >= time &&
+					(encryptionMappings[i].LastAccessTime + encryptionMappings[i].TimeoutSeconds >= time || encryptionMappings[i].TimeoutSeconds < 0) &&
 					(encryptionMappings[i].ExpireTime < 0.0 || encryptionMappings[i].ExpireTime >= time))
 				{
 					encryptionMappings[i].LastAccessTime = time;
