@@ -467,11 +467,11 @@ namespace NetcodeIO.NET
 				return;
 
 			// locate the client by endpoint and free their slot
-			var clientIndex = encryptionManager.GetClientID( cryptIdx );
+			var clientIndex = encryptionManager.GetClientID(cryptIdx);
 
 			var client = clientSlots[clientIndex];
 			clientSlots[clientIndex] = null;
-			
+
 			// remove encryption mapping
 			encryptionManager.RemoveEncryptionMapping(sender, time);
 
@@ -505,7 +505,7 @@ namespace NetcodeIO.NET
 			if (!payloadPacket.Read(reader, size - (int)reader.ReadPosition, decryptKey, protocolID))
 				return;
 
-			var clientIndex = encryptionManager.GetClientID( cryptIdx );
+			var clientIndex = encryptionManager.GetClientID(cryptIdx);
 			var client = clientSlots[clientIndex];
 
 			// trigger callback
@@ -680,7 +680,7 @@ namespace NetcodeIO.NET
 			}
 
 			// if this server's public IP is not in the list of endpoints, packet is not valid
-			bool serverAddressInEndpoints = privateConnectToken.ConnectServers.Any(x => x.Endpoint.Equals(this.listenEndpoint));
+			bool serverAddressInEndpoints = privateConnectToken.ConnectServers.Any(x => x.Endpoint.CompareEndpoint(this.listenEndpoint, this.Port));
 			if (!serverAddressInEndpoints)
 			{
 				log("Server address not listen in token", NetcodeLogLevel.Debug);

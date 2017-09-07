@@ -44,7 +44,7 @@ namespace NetcodeIO.NET.Utils.IO
 		public void Bind(EndPoint endpoint)
 		{
 			internalSocket.Bind(endpoint);
-			
+
 			socketThread = new Thread(runSocket);
 			socketThread.Start();
 		}
@@ -93,7 +93,7 @@ namespace NetcodeIO.NET.Utils.IO
 				{
 					datagramQueue.ReadFrom(internalSocket);
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
 					if (e is SocketException)
 					{
@@ -168,7 +168,7 @@ namespace NetcodeIO.NET.Utils.IO
 	{
 		public int BoundPort
 		{
-			get { return 0; }
+			get { return ((IPEndPoint)endpoint).Port; }
 		}
 
 		private struct simulatedPacket
@@ -292,7 +292,7 @@ namespace NetcodeIO.NET.Utils.IO
 			packet = new Datagram();
 			return false;
 		}
-		
+
 		public void Close()
 		{
 			running = false;

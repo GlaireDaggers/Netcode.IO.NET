@@ -8,8 +8,18 @@ using NetcodeIO.NET.Internal;
 
 namespace NetcodeIO.NET.Utils
 {
-	internal class MiscUtils
+	internal static class MiscUtils
 	{
+		public static bool CompareAddress(this IPEndPoint lhs, IPEndPoint rhs)
+		{
+			return lhs.Address.Equals(rhs.Address);
+		}
+
+		public static bool CompareEndpoint(this IPEndPoint lhs, IPEndPoint rhs, int port)
+		{
+			return lhs.Address.Equals(rhs.Address) && lhs.Port == port;
+		}
+
 		public static bool AddressEqual(EndPoint lhs, EndPoint rhs)
 		{
 			if (lhs == null) return false;
