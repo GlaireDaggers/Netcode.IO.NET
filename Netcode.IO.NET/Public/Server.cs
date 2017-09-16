@@ -470,6 +470,8 @@ namespace NetcodeIO.NET
 			var clientIndex = encryptionManager.GetClientID(cryptIdx);
 
 			var client = clientSlots[clientIndex];
+            if (client == null) return;
+
 			clientSlots[clientIndex] = null;
 
 			// remove encryption mapping
@@ -548,6 +550,8 @@ namespace NetcodeIO.NET
 			}
 
 			var client = this.clientSlots[(int)keepAlivePacket.ClientIndex];
+            if (client == null) return;
+
 			if (!client.RemoteEndpoint.Equals(sender))
 			{
 				log("Client does not match sender", NetcodeLogLevel.Debug);

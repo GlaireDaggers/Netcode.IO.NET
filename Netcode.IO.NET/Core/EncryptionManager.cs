@@ -74,7 +74,7 @@ namespace NetcodeIO.NET
 
 			for (int i = 0; i < encryptionMappings.Length; i++)
 			{
-				if ((timeoutSeconds >= 0 && encryptionMappings[i].LastAccessTime + timeoutSeconds < time) ||
+				if ((encryptionMappings[i].TimeoutSeconds >= 0 && encryptionMappings[i].LastAccessTime + encryptionMappings[i].TimeoutSeconds < time) ||
 					(encryptionMappings[i].ExpireTime >= 0.0 && encryptionMappings[i].ExpireTime < time))
 				{
 					encryptionMappings[i].Address = address;

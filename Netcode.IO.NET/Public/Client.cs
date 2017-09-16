@@ -331,17 +331,16 @@ namespace NetcodeIO.NET
 
 			isRunning = false;
 			pendingDisconnectState = ClientState.Disconnected;
+            
+            changeState(disconnectState);
 
-			stopSocket();
+            stopSocket();
 
 			connectServers.Clear();
 
 			currentServerEndpoint = null;
 			nextPacketSequence = 0;
-			clientToServerKey = null;
 			serverToClientKey = null;
-
-			changeState(disconnectState);
 		}
 
 		internal void Tick(double time)
@@ -477,7 +476,7 @@ namespace NetcodeIO.NET
 			}
 
 			// if we don't get a response within timeout, move on.
-			if ((int)connectionTimer >= connectToken.TimeoutSeconds)
+			if ((int)connectionTimer >= connectToken.TimeoutSeconds && connectToken.TimeoutSeconds >= 0)
 			{
 				pendingDisconnectState = ClientState.ConnectionRequestTimedOut;
 				connectionMoveNextEndpoint();
@@ -497,7 +496,7 @@ namespace NetcodeIO.NET
 			}
 
 			// if we don't get a response within timeout, move on.
-			if ((int)connectionTimer >= connectToken.TimeoutSeconds)
+			if ((int)connectionTimer >= connectToken.TimeoutSeconds && connectToken.TimeoutSeconds >= 0)
 			{
 				pendingDisconnectState = ClientState.ChallengeResponseTimedOut;
 				connectionMoveNextEndpoint();
@@ -689,7 +688,7 @@ namespace NetcodeIO.NET
 		{
 			// assign a sequence number to this packet
 			packetHeader.SequenceNumber = this.nextPacketSequence++;
-
+            
 			// encrypt packet data
 			byte[] encryptedPacketBuffer = BufferPool.GetBuffer(2048);
 			int encryptedBytes = PacketIO.EncryptPacketData(packetHeader, connectToken.ProtocolID, packetData, packetDataLen, key, encryptedPacketBuffer);
@@ -706,10 +705,13 @@ namespace NetcodeIO.NET
 				packetLen = (int)packetWriter.WritePosition;
 			}
 
-			// send packet
-			socket.SendTo(packetBuffer, packetLen, currentServerEndpoint);
+            // send packet
+            try {
+                socket.SendTo(packetBuffer, packetLen, currentServerEndpoint);
+            }
+            catch { }
 
-			BufferPool.ReturnBuffer(packetBuffer);
+            BufferPool.ReturnBuffer(packetBuffer);
 			BufferPool.ReturnBuffer(encryptedPacketBuffer);
 		}
 
