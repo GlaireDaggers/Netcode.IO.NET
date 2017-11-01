@@ -432,14 +432,18 @@ namespace NetcodeIO.NET
 		private bool checkReplay(NetcodePacketHeader header, EndPoint sender)
 		{
 			var cryptIdx = encryptionManager.FindEncryptionMapping(sender, time);
-			if (cryptIdx == -1)
-				return true;
+            if (cryptIdx == -1) {
+                log("Replay protection failed to find encryption mapping", NetcodeLogLevel.Debug);
+                return true;
+            }
 
 			var clientIndex = encryptionManager.GetClientID(cryptIdx);
 			var client = clientSlots[clientIndex];
 
-			if (client == null)
-				return true;
+            if (client == null) {
+                log("Replay protection failed to find client", NetcodeLogLevel.Debug);
+                return true;
+            }
 
 			return client.replayProtection.AlreadyReceived(header.SequenceNumber);
 		}
@@ -476,6 +480,13 @@ namespace NetcodeIO.NET
 
 			// remove encryption mapping
 			encryptionManager.RemoveEncryptionMapping(sender, time);
+
+            // make sure all other clients still have their encryption mappings
+            foreach (RemoteClient otherClient in clientSlots) {
+                if (otherClient == null) continue;
+                if (encryptionManager.FindEncryptionMapping(otherClient.RemoteEndpoint, time) == -1)
+                    log("Encryption mapping removed wrong mapping!", NetcodeLogLevel.Debug);
+            }
 
 			// trigger client disconnect callback
 			if (OnClientDisconnected != null)
@@ -522,6 +533,7 @@ namespace NetcodeIO.NET
 		{
 			if (checkReplay(header, sender))
 			{
+                log("Detected replay in keep-alive", NetcodeLogLevel.Debug);
 				return;
 			}
 
@@ -550,7 +562,10 @@ namespace NetcodeIO.NET
 			}
 
 			var client = this.clientSlots[(int)keepAlivePacket.ClientIndex];
-            if (client == null) return;
+            if (client == null) {
+                log("Failed to find client for endpoint", NetcodeLogLevel.Debug);
+                return;
+            }
 
 			if (!client.RemoteEndpoint.Equals(sender))
 			{

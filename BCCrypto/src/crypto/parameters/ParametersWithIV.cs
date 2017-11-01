@@ -1,12 +1,13 @@
 using System;
+using Org.BouncyCastle.Utilities;
 
 namespace Org.BouncyCastle.Crypto.Parameters
 {
     public class ParametersWithIV
 		: ICipherParameters
     {
-		private readonly ICipherParameters	parameters;
-		private readonly byte[]				iv;
+		private ICipherParameters	parameters;
+		private byte[]				iv;
 
 		public ParametersWithIV(
             ICipherParameters	parameters,
@@ -30,9 +31,23 @@ namespace Org.BouncyCastle.Crypto.Parameters
             Array.Copy(iv, ivOff, this.iv, 0, ivLen);
         }
 
+        public void Set( ICipherParameters parameters, byte[] iv )
+        {
+            this.parameters = parameters;
+            this.iv = BufferPool.GetBuffer(iv.Length);
+            Array.Copy(iv, 0, this.iv, 0, this.iv.Length);
+        }
+
+        public void Reset()
+        {
+            BufferPool.ReturnBuffer(this.iv);
+            this.iv = null;
+        }
+
 		public byte[] GetIV()
         {
-			return (byte[]) iv.Clone();
+            //return (byte[]) iv.Clone();
+            return iv;
         }
 
 		public ICipherParameters Parameters

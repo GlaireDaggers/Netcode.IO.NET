@@ -13,84 +13,135 @@ namespace Org.BouncyCastle.Crypto.TlsExt
 	public class AEAD_Chacha20_Poly1305
 	{
 		private static readonly byte[] Zeroes = new byte[15];
+        private static ChaCha7539Engine cipher;
+
+        private static IMac _mac = new Poly1305();
+
+        private static ParametersWithIV _temp_Params;
+        private static KeyParameter _encryptKey;
+        private static KeyParameter _decryptKey;
+        private static KeyParameter _macKey;
+
+        private static object mutex = new object();
 
 		public static int Encrypt(byte[] plaintext, int offset, int len, byte[] additionalData, byte[] nonce, byte[] key, byte[] outBuffer)
 		{
-			var cipher = new ChaCha7539Engine();
+            lock (mutex) {
+                if (cipher == null)
+                    cipher = new ChaCha7539Engine();
+                else
+                    cipher.Reset();
+                
+                if (_encryptKey == null)
+                    _encryptKey = new KeyParameter(key);
+                else {
+                    _encryptKey.Reset();
+                    _encryptKey.SetKey(key);
+                }
 
-			var encryptKey = new KeyParameter(key);
-			cipher.Init(true, new ParametersWithIV(encryptKey, nonce));
+                if (_temp_Params == null)
+                    _temp_Params = new ParametersWithIV(_encryptKey, nonce);
+                else {
+                    _temp_Params.Reset();
+                    _temp_Params.Set(_encryptKey, nonce);
+                }
 
-			byte[] firstBlock = BufferPool.GetBuffer(64);
-			KeyParameter macKey = GenerateRecordMacKey(cipher, firstBlock);
-			
-			cipher.ProcessBytes(plaintext, offset, len, outBuffer, 0);
+                cipher.Init(true, _temp_Params);
 
-			byte[] mac = BufferPool.GetBuffer(16);
-			int macsize = CalculateRecordMac(macKey, additionalData, outBuffer, 0, len, mac);
-			Array.Copy(mac, 0, outBuffer, len, macsize);
+                byte[] firstBlock = BufferPool.GetBuffer(64);
+                KeyParameter macKey = GenerateRecordMacKey(cipher, firstBlock);
 
-			BufferPool.ReturnBuffer(mac);
-			BufferPool.ReturnBuffer(firstBlock);
+                cipher.ProcessBytes(plaintext, offset, len, outBuffer, 0);
 
-			return len + 16;
+                byte[] mac = BufferPool.GetBuffer(16);
+                int macsize = CalculateRecordMac(macKey, additionalData, outBuffer, 0, len, mac);
+                Array.Copy(mac, 0, outBuffer, len, macsize);
+
+                BufferPool.ReturnBuffer(mac);
+                BufferPool.ReturnBuffer(firstBlock);
+
+                return len + 16;
+            }
 		}
 
 		public static int Decrypt(byte[] ciphertext, int offset, int len, byte[] additionalData, byte[] nonce, byte[] key, byte[] outBuffer)
 		{
-			var cipher = new ChaCha7539Engine();
+            lock (mutex) {
+                if (cipher == null)
+                    cipher = new ChaCha7539Engine();
+                else
+                    cipher.Reset();
 
-			var decryptKey = new KeyParameter(key);
-			cipher.Init(false, new ParametersWithIV(decryptKey, nonce));
+                if (_decryptKey == null)
+                    _decryptKey = new KeyParameter(key);
+                else {
+                    _decryptKey.Reset();
+                    _decryptKey.SetKey(key);
+                }
 
-			byte[] firstBlock = BufferPool.GetBuffer(64);
-			KeyParameter macKey = GenerateRecordMacKey(cipher, firstBlock);
+                if (_temp_Params == null)
+                    _temp_Params = new ParametersWithIV(_decryptKey, nonce);
+                else {
+                    _temp_Params.Reset();
+                    _temp_Params.Set(_decryptKey, nonce);
+                }
 
-			int plaintextLength = len - 16;
+                cipher.Init(false, _temp_Params);
 
-			byte[] calculatedMac = BufferPool.GetBuffer(16);
-			CalculateRecordMac(macKey, additionalData, ciphertext, offset, plaintextLength, calculatedMac);
+                byte[] firstBlock = BufferPool.GetBuffer(64);
+                KeyParameter macKey = GenerateRecordMacKey(cipher, firstBlock);
 
-			byte[] receivedMac = BufferPool.GetBuffer(16);
-			Array.Copy(ciphertext, offset + plaintextLength, receivedMac, 0, receivedMac.Length);
+                int plaintextLength = len - 16;
 
-			if (!Arrays.ConstantTimeAreEqual(calculatedMac, receivedMac))
-			{
-				BufferPool.ReturnBuffer(calculatedMac);
-				BufferPool.ReturnBuffer(receivedMac);
-				BufferPool.ReturnBuffer(firstBlock);
+                byte[] calculatedMac = BufferPool.GetBuffer(16);
+                CalculateRecordMac(macKey, additionalData, ciphertext, offset, plaintextLength, calculatedMac);
 
-				throw new TlsFatalAlert(AlertDescription.bad_record_mac);
-			}
+                byte[] receivedMac = BufferPool.GetBuffer(16);
+                Array.Copy(ciphertext, offset + plaintextLength, receivedMac, 0, receivedMac.Length);
 
-			BufferPool.ReturnBuffer(calculatedMac);
-			BufferPool.ReturnBuffer(receivedMac);
-			BufferPool.ReturnBuffer(firstBlock);
-			
-			cipher.ProcessBytes(ciphertext, offset, plaintextLength, outBuffer, 0);
-			return plaintextLength;
+                if (!Arrays.ConstantTimeAreEqual(calculatedMac, receivedMac)) {
+                    BufferPool.ReturnBuffer(calculatedMac);
+                    BufferPool.ReturnBuffer(receivedMac);
+                    BufferPool.ReturnBuffer(firstBlock);
+
+                    throw new TlsFatalAlert(AlertDescription.bad_record_mac);
+                }
+
+                BufferPool.ReturnBuffer(calculatedMac);
+                BufferPool.ReturnBuffer(receivedMac);
+                BufferPool.ReturnBuffer(firstBlock);
+
+                cipher.ProcessBytes(ciphertext, offset, plaintextLength, outBuffer, 0);
+                return plaintextLength;
+            }
 		}
 
 		protected static KeyParameter GenerateRecordMacKey(IStreamCipher cipher, byte[] firstBlock)
 		{
 			cipher.ProcessBytes(firstBlock, 0, firstBlock.Length, firstBlock, 0);
+            
+            if (_macKey == null)
+                _macKey = new KeyParameter(firstBlock, 0, 32);
+            else {
+                _macKey.Reset();
+                _macKey.SetKey(firstBlock, 0, 32);
+            }
 
-			KeyParameter macKey = new KeyParameter(firstBlock, 0, 32);
-			Arrays.Fill(firstBlock, (byte)0);
-			return macKey;
+            Arrays.Fill(firstBlock, (byte)0);
+			return _macKey;
 		}
 
 		protected static int CalculateRecordMac(KeyParameter macKey, byte[] additionalData, byte[] buf, int off, int len, byte[] outMac)
 		{
-			IMac mac = new Poly1305();
-			mac.Init(macKey);
+            _mac.Reset();
+			_mac.Init(macKey);
 
-			UpdateRecordMacText(mac, additionalData, 0, additionalData.Length);
-			UpdateRecordMacText(mac, buf, off, len);
-			UpdateRecordMacLength(mac, additionalData.Length);
-			UpdateRecordMacLength(mac, len);
+			UpdateRecordMacText(_mac, additionalData, 0, additionalData.Length);
+			UpdateRecordMacText(_mac, buf, off, len);
+			UpdateRecordMacLength(_mac, additionalData.Length);
+			UpdateRecordMacLength(_mac, len);
 
-			return MacUtilities.DoFinalOut(mac, outMac);
+			return MacUtilities.DoFinalOut(_mac, outMac);
 		}
 
 		protected static void UpdateRecordMacLength(IMac mac, int len)

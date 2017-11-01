@@ -59,18 +59,12 @@ namespace NetcodeIO.NET.Utils.IO
 		}
 
 		protected ByteStream readStream;
-		protected BinaryReader reader;
-
 		protected ByteStream writeStream;
-		protected BinaryWriter writer;
 
 		public ByteArrayReaderWriter()
 		{
 			this.readStream = new ByteStream();
-			this.reader = new BinaryReader(readStream);
-
 			this.writeStream = new ByteStream();
-			this.writer = new BinaryWriter(writeStream);
 		}
 
 		public void SetStream(byte[] byteArray)
@@ -79,17 +73,17 @@ namespace NetcodeIO.NET.Utils.IO
 			this.writeStream.SetStreamSource(byteArray);
 		}
 
-		public void Write(byte val) { writer.Write(val); }
-		public void Write(byte[] val) { writer.Write(val); }
-		public void Write(char val) { writer.Write(val); }
-		public void Write(char[] val) { writer.Write(val); }
-		public void Write(string val) { writer.Write(val); }
-		public void Write(short val) { writer.Write(val); }
-		public void Write(int val) { writer.Write(val); }
-		public void Write(long val) { writer.Write(val); }
-		public void Write(ushort val) { writer.Write(val); }
-		public void Write(uint val) { writer.Write(val); }
-		public void Write(ulong val) { writer.Write(val); }
+		public void Write(byte val) { writeStream.Write(val); }
+		public void Write(byte[] val) { writeStream.Write(val); }
+		public void Write(char val) { writeStream.Write(val); }
+		public void Write(char[] val) { writeStream.Write(val); }
+		public void Write(string val) { writeStream.Write(val); }
+		public void Write(short val) { writeStream.Write(val); }
+		public void Write(int val) { writeStream.Write(val); }
+		public void Write(long val) { writeStream.Write(val); }
+		public void Write(ushort val) { writeStream.Write(val); }
+		public void Write(uint val) { writeStream.Write(val); }
+		public void Write(ulong val) { writeStream.Write(val); }
 
 		public void WriteASCII(char[] chars)
 		{
@@ -115,17 +109,17 @@ namespace NetcodeIO.NET.Utils.IO
 				Write(buffer[i]);
 		}
 
-		public byte ReadByte() { return reader.ReadByte(); }
-		public byte[] ReadBytes(int length) { return reader.ReadBytes(length); }
-		public char ReadChar() { return reader.ReadChar(); }
-		public char[] ReadChars(int length) { return reader.ReadChars(length); }
-		public string ReadString() { return reader.ReadString(); }
-		public short ReadInt16() { return reader.ReadInt16(); }
-		public int ReadInt32() { return reader.ReadInt32(); }
-		public long ReadInt64() { return reader.ReadInt64(); }
-		public ushort ReadUInt16() { return reader.ReadUInt16(); }
-		public uint ReadUInt32() { return reader.ReadUInt32(); }
-		public ulong ReadUInt64() { return reader.ReadUInt64(); }
+		public byte ReadByte() { return readStream.ReadByte(); }
+		public byte[] ReadBytes(int length) { return readStream.ReadBytes(length); }
+		public char ReadChar() { return readStream.ReadChar(); }
+		public char[] ReadChars(int length) { return readStream.ReadChars(length); }
+		public string ReadString() { return readStream.ReadString(); }
+		public short ReadInt16() { return readStream.ReadInt16(); }
+		public int ReadInt32() { return readStream.ReadInt32(); }
+		public long ReadInt64() { return readStream.ReadInt64(); }
+		public ushort ReadUInt16() { return readStream.ReadUInt16(); }
+		public uint ReadUInt32() { return readStream.ReadUInt32(); }
+		public ulong ReadUInt64() { return readStream.ReadUInt64(); }
 
 		public void ReadASCIICharsIntoBuffer(char[] buffer, int length)
 		{

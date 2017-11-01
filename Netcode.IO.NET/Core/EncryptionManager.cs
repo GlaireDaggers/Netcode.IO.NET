@@ -109,7 +109,7 @@ namespace NetcodeIO.NET
 						int index = i - 1;
 						while (index >= 0)
 						{
-							if ((encryptionMappings[i].TimeoutSeconds < 0 || encryptionMappings[index].LastAccessTime + encryptionMappings[i].TimeoutSeconds >= time ) &&
+							if ((encryptionMappings[index].TimeoutSeconds < 0 || encryptionMappings[index].LastAccessTime + encryptionMappings[index].TimeoutSeconds >= time ) &&
 								(encryptionMappings[index].ExpireTime < 0 || encryptionMappings[index].ExpireTime > time))
 								break;
 							index--;

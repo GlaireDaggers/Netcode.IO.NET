@@ -31,6 +31,7 @@ namespace NetcodeIO.NET.Internal
 				throw e;
 			}
 
+            BufferPool.ReturnBuffer(encryptedBuffer);
 			return decryptedBytes;
 		}
 

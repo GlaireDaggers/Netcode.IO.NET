@@ -1,4 +1,5 @@
 using System;
+using Org.BouncyCastle.Utilities;
 
 using Org.BouncyCastle.Crypto;
 
@@ -7,7 +8,7 @@ namespace Org.BouncyCastle.Crypto.Parameters
     public class KeyParameter
 		: ICipherParameters
     {
-        private readonly byte[] key;
+        private byte[] key;
 
 		public KeyParameter(
 			byte[] key)
@@ -36,7 +37,25 @@ namespace Org.BouncyCastle.Crypto.Parameters
 
 		public byte[] GetKey()
         {
-			return (byte[]) key.Clone();
+            //return (byte[]) key.Clone();
+            return key;
+        }
+
+        public void Reset()
+        {
+            BufferPool.ReturnBuffer(this.key);
+            this.key = null;
+        }
+
+        public void SetKey( byte[] key )
+        {
+            SetKey(key, 0, key.Length);
+        }
+
+        public void SetKey(byte[] key, int keyoff, int keylen)
+        {
+            this.key = BufferPool.GetBuffer(keylen);
+            Array.Copy(key, keyoff, this.key, 0, keylen);
         }
     }
 
