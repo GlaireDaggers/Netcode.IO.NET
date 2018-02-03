@@ -172,6 +172,7 @@ namespace NetcodeIO.NET
 
 		private ISocketContext listenSocket;
 		private IPEndPoint listenEndpoint;
+		private IPEndPoint externalEndpoint;
 
 		private bool isRunning = false;
 
@@ -198,7 +199,12 @@ namespace NetcodeIO.NET
 
 		#endregion
 
-		public Server(int maxSlots, string address, int port, ulong protocolID, byte[] privateKey)
+		public Server(int maxSlots, string address, int port, ulong protocolID, byte[] privateKey) :
+			this(maxSlots, address, address, port, protocolID, privateKey)
+		{
+		}
+
+		public Server(int maxSlots, string address, string externalAddress, int port, ulong protocolID, byte[] privateKey)
 		{
 			this.tickrate = 60;
 
@@ -211,6 +217,7 @@ namespace NetcodeIO.NET
 			this.encryptionManager = new EncryptionManager(maxSlots);
 
 			this.listenEndpoint = new IPEndPoint(IPAddress.Parse(address), port);
+			this.externalEndpoint = new IPEndPoint(IPAddress.Parse(externalAddress), port);
 
 			if (this.listenEndpoint.AddressFamily == AddressFamily.InterNetwork)
 				this.listenSocket = new UDPSocketContext(AddressFamily.InterNetwork);
@@ -699,7 +706,7 @@ namespace NetcodeIO.NET
 			}
 
 			// if this server's public IP is not in the list of endpoints, packet is not valid
-			bool serverAddressInEndpoints = privateConnectToken.ConnectServers.Any(x => x.Endpoint.CompareEndpoint(this.listenEndpoint, this.Port));
+			bool serverAddressInEndpoints = privateConnectToken.ConnectServers.Any(x => x.Endpoint.CompareEndpoint(this.externalEndpoint, this.Port));
 			if (!serverAddressInEndpoints)
 			{
 				log("Server address not listen in token", NetcodeLogLevel.Debug);
