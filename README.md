@@ -33,6 +33,10 @@ server.OnClientDisconnected += clientDisconnectedHandler;	// void( RemoteClient 
 // Called when a payload has been received from a client
 // Note that you should not keep a reference to the payload, as it will be returned to a pool after this call completes.
 server.OnClientMessageRecieved += messageReceivedHandler;	// void( RemoteClient client, byte[] payload, int payloadSize )
+
+// Called when the server logs a message
+// If you are not using a custom logger, a handler using Console.Write() is sufficient.
+server.OnLogMessage += logMessageHandler;			// void( string message, NetcodeLogLevel logLevel )
 ```
 
 To send a payload to a remote client connected to the server:

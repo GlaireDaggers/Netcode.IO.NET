@@ -84,6 +84,11 @@ namespace NetcodeIO.NET
 	public delegate void RemoteClientMessageReceivedEventHandler(RemoteClient sender, byte[] payload, int payloadSize);
 
 	/// <summary>
+	/// Event handler for when the server writes a log message
+	/// </summary>
+	public delegate void ServerLogEventHandler(string message, NetcodeLogLevel logLevel);
+
+	/// <summary>
 	/// Class for starting a Netcode.IO server and accepting connections from remote clients
 	/// </summary>
 	public sealed class Server
@@ -115,6 +120,11 @@ namespace NetcodeIO.NET
 		/// Event triggered when a payload is received from a remote client
 		/// </summary>
 		public event RemoteClientMessageReceivedEventHandler OnClientMessageReceived;
+
+		/// <summary>
+		/// Event triggered when the server logs a message
+		/// </summary>
+		public event ServerLogEventHandler OnLogMessage;
 
 		/// <summary>
 		/// Log level for messages
@@ -304,6 +314,12 @@ namespace NetcodeIO.NET
 			{
 				foreach (var receiver in OnClientMessageReceived.GetInvocationList())
 					OnClientMessageReceived -= (RemoteClientMessageReceivedEventHandler)receiver;
+			}
+
+			if (OnLogMessage != null)
+			{
+				foreach (var receiver in OnLogMessage.GetInvocationList())
+					OnLogMessage -= (ServerLogEventHandler)receiver;
 			}
 		}
 
@@ -1028,7 +1044,8 @@ namespace NetcodeIO.NET
 			if (logLevel > this.LogLevel)
 				return;
 
-			Console.WriteLine(log);
+			if (OnLogMessage != null)
+				OnLogMessage(log, logLevel);
 		}
 
 		private void log(string log, NetcodeLogLevel logLevel, params object[] args)
@@ -1036,7 +1053,8 @@ namespace NetcodeIO.NET
 			if (logLevel > this.LogLevel)
 				return;
 
-			Console.WriteLine(string.Format(log, args));
+			if (OnLogMessage != null)
+				OnLogMessage(string.Format(log, args), logLevel);
 		}
 
 		#endregion
