@@ -76,9 +76,9 @@ namespace NetcodeIO.NET.Utils.IO
 		}
 
 		public void Close()
-			{
-				internalSocket.Close();
-			}
+		{
+			internalSocket.Close();
+		}
 
 		public void Dispose()
 		{
