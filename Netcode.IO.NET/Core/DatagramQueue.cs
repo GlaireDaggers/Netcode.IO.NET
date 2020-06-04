@@ -28,6 +28,13 @@ namespace NetcodeIO.NET.Utils
 		private object datagram_mutex = new object();
 		private object endpoint_mutex = new object();
 
+        private IPAddress defaultAnyAddress;
+
+        public DatagramQueue(IPAddress defaultAnyAddress)
+        {
+            this.defaultAnyAddress = defaultAnyAddress;
+        }
+
 		public int Count
 		{
 			get
@@ -51,7 +58,7 @@ namespace NetcodeIO.NET.Utils
 				if (endpointPool.Count > 0)
 					sender = endpointPool.Dequeue();
 				else
-					sender = new IPEndPoint(IPAddress.Any, 0);
+					sender = new IPEndPoint(defaultAnyAddress, 0);
 			}
 
 			byte[] receiveBuffer = BufferPool.GetBuffer(2048);
