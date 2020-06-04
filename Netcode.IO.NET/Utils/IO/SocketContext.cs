@@ -37,7 +37,7 @@ namespace NetcodeIO.NET.Utils.IO
 
 		public UDPSocketContext(AddressFamily addressFamily)
 		{
-			datagramQueue = new DatagramQueue();
+			datagramQueue = new DatagramQueue(addressFamily == AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any);
 			internalSocket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp);
 		}
 
@@ -182,7 +182,7 @@ namespace NetcodeIO.NET.Utils.IO
 
 		private EndPoint endpoint;
 		private List<simulatedPacket> simulatedPackets = new List<simulatedPacket>();
-		private DatagramQueue datagramQueue = new DatagramQueue();
+		private DatagramQueue datagramQueue = new DatagramQueue(IPAddress.Any);
 		private object mutex = new object();
 
 		private Random rand = new Random();
