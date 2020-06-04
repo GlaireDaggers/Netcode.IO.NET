@@ -28,12 +28,12 @@ namespace NetcodeIO.NET.Utils
 		private object datagram_mutex = new object();
 		private object endpoint_mutex = new object();
 
-        private IPAddress defaultAnyAddress;
+		private IPAddress defaultAnyAddress;
 
-        public DatagramQueue(IPAddress defaultAnyAddress)
-        {
-            this.defaultAnyAddress = defaultAnyAddress;
-        }
+		public DatagramQueue(IPAddress defaultAnyAddress)
+		{
+			this.defaultAnyAddress = defaultAnyAddress;
+		}
 
 		public int Count
 		{
