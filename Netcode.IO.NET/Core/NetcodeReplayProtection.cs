@@ -39,6 +39,9 @@
 			if (sequence + NETCODE_REPLAY_PROTECTION_BUFFER_SIZE <= mostRecentSequence)
 				return true;
 
+			if (sequence > mostRecentSequence)
+				mostRecentSequence = sequence;
+
 			int index = (int)(sequence % NETCODE_REPLAY_PROTECTION_BUFFER_SIZE);
 			if (receivedPackets[index] == 0xFFFFFFFFFFFFFFFF)
 			{
